@@ -1,4 +1,5 @@
 require "active_support/core_ext/string/inflections"
+require "hub_kernel/authz"
 
 module HubKernel
   module Exposes
@@ -12,6 +13,10 @@ module HubKernel
 
     def exposures = exposed_methods.values
 
+    def exposures_for(person:, account:)
+      exposures.select { |exposure| allowed?(exposure, person, account) }
+    end
+
     def exposure_problems
       exposed_methods.values.filter_map { |exposure| exposure_problem(exposure) }
     end
@@ -21,6 +26,10 @@ module HubKernel
     def exposed_methods = @exposed_methods ||= {}
 
     def exposing_hub = name.demodulize
+
+    def allowed?(exposure, person, account)
+      Authz.check.call(person, "#{exposing_hub.underscore}:#{exposure.name}", account)
+    end
 
     def exposure_problem(exposure)
       return "#{exposing_hub} exposes #{exposure.name}, which it has no method for" unless respond_to?(exposure.name)
