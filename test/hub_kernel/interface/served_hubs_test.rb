@@ -31,6 +31,12 @@ module HubKernel
 
         assert_equal FieldNotes, HubKernel::Interface.find("notes")
       end
+
+      test "a hub listed under a chosen name is not served at its module name" do
+        HubKernel::Interface.hubs = [ { "notes" => FieldNotes } ]
+
+        assert_nil HubKernel::Interface.find("field_notes")
+      end
     end
   end
 end
