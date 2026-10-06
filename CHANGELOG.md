@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-06
+
+### Added
+- `HubKernel::Interface.served`, every served name with the hub served at it.
+
 ## [0.2.0] - 2026-10-06
 
 ### Added

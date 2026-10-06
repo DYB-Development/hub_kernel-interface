@@ -49,6 +49,7 @@ HubKernel::Interface.hubs = [ Supplies, { "money" => Billing::Ledger } ]
 
 HubKernel::Interface.find("supplies") # => Supplies
 HubKernel::Interface.find("money")    # => Billing::Ledger
+HubKernel::Interface.served           # => { "supplies" => Supplies, "money" => Billing::Ledger }
 ```
 
 The permission check is still asked about a hub served under a chosen name by its own name,
