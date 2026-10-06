@@ -43,6 +43,12 @@ module HubKernel
 
         assert_equal [ FieldNotes, FieldNotes ], [ HubKernel::Interface.find("field_notes"), HubKernel::Interface.find("notes") ]
       end
+
+      test "a name no served hub answers at finds no hub" do
+        HubKernel::Interface.hubs = [ Supplies ]
+
+        assert_nil HubKernel::Interface.find("ledger")
+      end
     end
   end
 end
