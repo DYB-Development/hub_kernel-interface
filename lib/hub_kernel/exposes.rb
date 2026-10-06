@@ -7,6 +7,7 @@ module HubKernel
   class UnwiredPortError < StandardError; end
   class NonBooleanAnswerError < StandardError; end
   class UnexposedMethodError < StandardError; end
+  class NotAllowed < StandardError; end
 
   module Exposes
     Exposed = Data.define(:name, :takes, :writes)
@@ -27,6 +28,7 @@ module HubKernel
 
     def call_exposed(name, values:, person:, account:)
       exposure = exposed(name) || raise(UnexposedMethodError, "#{exposing_hub} does not expose #{name}")
+      refuse_unless_allowed(exposure, person, account)
       within_account(account) { public_send(exposure.name, **values.slice(*exposure.takes)) }
     end
 
@@ -43,6 +45,10 @@ module HubKernel
     def refuse_without_caller(person, account)
       raise MissingArgumentError, "A call by name needs a person" if person.nil?
       raise MissingArgumentError, "A call by name needs an account" if account.nil?
+    end
+
+    def refuse_unless_allowed(exposure, person, account)
+      raise NotAllowed, "#{exposing_hub} #{exposure.name}" unless allowed?(exposure, person, account)
     end
 
     def allowed?(exposure, person, account)

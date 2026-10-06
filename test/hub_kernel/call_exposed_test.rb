@@ -37,5 +37,11 @@ module HubKernel
     test "calling a name the hub does not expose raises an error naming the hub and the name" do
       assert_raises(HubKernel::UnexposedMethodError, match: "Shop does not expose close_shop") { Shop.call_exposed("close_shop", values: {}, person: :sam, account: :acme) }
     end
+
+    test "a call the permission check refuses raises the not-allowed error naming the hub and the method" do
+      HubKernel::Authz.check = ->(*) { false }
+
+      assert_raises(HubKernel::NotAllowed, match: "Shop price_of") { Shop.call_exposed("price_of", values: { item: "soap" }, person: :sam, account: :acme) }
+    end
   end
 end
