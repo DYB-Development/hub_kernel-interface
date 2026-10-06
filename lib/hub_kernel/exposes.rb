@@ -21,7 +21,16 @@ module HubKernel
     def exposing_hub = name.demodulize
 
     def exposure_problem(exposure)
-      "#{exposing_hub} exposes #{exposure.name}, which it has no method for" unless respond_to?(exposure.name)
+      return "#{exposing_hub} exposes #{exposure.name}, which it has no method for" unless respond_to?(exposure.name)
+      return if takes_listed_values?(exposure)
+
+      "#{exposing_hub} exposes #{exposure.name} with #{exposure.takes.join(", ")}, but it takes #{keywords(exposure, :keyreq, :key).join(", ")}"
     end
+
+    def takes_listed_values?(exposure)
+      (keywords(exposure, :keyreq) - exposure.takes).empty? && (exposure.takes - keywords(exposure, :keyreq, :key)).empty?
+    end
+
+    def keywords(exposure, *kinds) = method(exposure.name).parameters.filter_map { |kind, value| value if kinds.include?(kind) }
   end
 end
