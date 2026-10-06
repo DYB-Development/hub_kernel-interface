@@ -37,6 +37,12 @@ module HubKernel
 
         assert_nil HubKernel::Interface.find("field_notes")
       end
+
+      test "the same hub listed alone and under a chosen name is served at both names" do
+        HubKernel::Interface.hubs = [ FieldNotes, { "notes" => FieldNotes } ]
+
+        assert_equal [ FieldNotes, FieldNotes ], [ HubKernel::Interface.find("field_notes"), HubKernel::Interface.find("notes") ]
+      end
     end
   end
 end
