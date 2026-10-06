@@ -39,5 +39,11 @@ module HubKernel
 
       assert_raises(HubKernel::UnwiredPortError, match: "hub_kernel's permission check is not filled") { Shop.exposures_for(person: :sam, account: :acme) }
     end
+
+    test "a permission check that answers neither true nor false raises the non-boolean answer error" do
+      HubKernel::Authz.check = ->(*) { "yes" }
+
+      assert_raises(HubKernel::NonBooleanAnswerError, match: 'The permission check must answer true or false, got "yes"') { Shop.exposures_for(person: :sam, account: :acme) }
+    end
   end
 end
