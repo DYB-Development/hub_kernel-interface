@@ -33,5 +33,11 @@ module HubKernel
     test "asking what a person may call with no account is refused" do
       assert_raises(HubKernel::MissingArgumentError, match: "needs an account") { Shop.exposures_for(person: :sam, account: nil) }
     end
+
+    test "asking what a person may call while the permission check is unset raises the unwired error" do
+      HubKernel::Authz.check = nil
+
+      assert_raises(HubKernel::UnwiredPortError, match: "hub_kernel's permission check is not filled") { Shop.exposures_for(person: :sam, account: :acme) }
+    end
   end
 end

@@ -3,6 +3,7 @@ require "hub_kernel/authz"
 
 module HubKernel
   class MissingArgumentError < ArgumentError; end
+  class UnwiredPortError < StandardError; end
 
   module Exposes
     Exposed = Data.define(:name, :takes, :writes)
@@ -37,6 +38,8 @@ module HubKernel
     end
 
     def allowed?(exposure, person, account)
+      raise UnwiredPortError, "hub_kernel's permission check is not filled" unless Authz.check
+
       Authz.check.call(person, "#{exposing_hub.underscore}:#{exposure.name}", account)
     end
 
