@@ -33,5 +33,9 @@ module HubKernel
     test "a value the method is not listed with is left out of the call" do
       assert_equal({ item: "soap" }, Labels.call_exposed("label", values: { item: "soap", colour: "red" }, person: :sam, account: :acme))
     end
+
+    test "calling a name the hub does not expose raises an error naming the hub and the name" do
+      assert_raises(HubKernel::UnexposedMethodError, match: "Shop does not expose close_shop") { Shop.call_exposed("close_shop", values: {}, person: :sam, account: :acme) }
+    end
   end
 end

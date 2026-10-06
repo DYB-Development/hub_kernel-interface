@@ -6,6 +6,7 @@ module HubKernel
   class MissingArgumentError < ArgumentError; end
   class UnwiredPortError < StandardError; end
   class NonBooleanAnswerError < StandardError; end
+  class UnexposedMethodError < StandardError; end
 
   module Exposes
     Exposed = Data.define(:name, :takes, :writes)
@@ -25,7 +26,7 @@ module HubKernel
     end
 
     def call_exposed(name, values:, person:, account:)
-      exposure = exposed(name)
+      exposure = exposed(name) || raise(UnexposedMethodError, "#{exposing_hub} does not expose #{name}")
       within_account(account) { public_send(exposure.name, **values.slice(*exposure.takes)) }
     end
 
