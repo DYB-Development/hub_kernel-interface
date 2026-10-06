@@ -25,5 +25,9 @@ module HubKernel
 
       assert_equal [ :price_of ], Shop.exposures_for(person: :sam, account: :acme).map(&:name)
     end
+
+    test "asking what a person may call with no person is refused" do
+      assert_raises(HubKernel::MissingArgumentError, match: "needs a person") { Shop.exposures_for(person: nil, account: :acme) }
+    end
   end
 end

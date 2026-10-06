@@ -2,6 +2,8 @@ require "active_support/core_ext/string/inflections"
 require "hub_kernel/authz"
 
 module HubKernel
+  class MissingArgumentError < ArgumentError; end
+
   module Exposes
     Exposed = Data.define(:name, :takes, :writes)
 
@@ -14,6 +16,8 @@ module HubKernel
     def exposures = exposed_methods.values
 
     def exposures_for(person:, account:)
+      refuse_without_caller(person, account)
+
       exposures.select { |exposure| allowed?(exposure, person, account) }
     end
 
@@ -26,6 +30,10 @@ module HubKernel
     def exposed_methods = @exposed_methods ||= {}
 
     def exposing_hub = name.demodulize
+
+    def refuse_without_caller(person, account)
+      raise MissingArgumentError, "A call by name needs a person" if person.nil?
+    end
 
     def allowed?(exposure, person, account)
       Authz.check.call(person, "#{exposing_hub.underscore}:#{exposure.name}", account)
