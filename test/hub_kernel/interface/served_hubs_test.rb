@@ -9,10 +9,14 @@ module HubKernel
 
       module FieldNotes
         extend HubKernel::Exposes
+
+        exposes :jot, takes: [], writes: true
+
+        def self.jot = "noted"
       end
 
-      setup { @hubs = HubKernel::Interface.hubs }
-      teardown { HubKernel::Interface.hubs = @hubs }
+      setup { @hubs, @check = HubKernel::Interface.hubs, HubKernel::Authz.check }
+      teardown { HubKernel::Interface.hubs, HubKernel::Authz.check = @hubs, @check }
 
       test "a host names its served hubs once and an interface gem reads that list" do
         HubKernel::Interface.hubs = [ Supplies ]
@@ -48,6 +52,16 @@ module HubKernel
         HubKernel::Interface.hubs = [ Supplies ]
 
         assert_nil HubKernel::Interface.find("ledger")
+      end
+
+      test "the permission check is asked about a hub served under a chosen name by the hub's own name" do
+        asked = []
+        HubKernel::Authz.check = ->(_person, action, _account) { asked << action; true }
+        HubKernel::Interface.hubs = [ { "notes" => FieldNotes } ]
+
+        HubKernel::Interface.find("notes").exposures_for(person: :sam, account: :acme)
+
+        assert_equal [ "field_notes:jot" ], asked
       end
     end
   end
