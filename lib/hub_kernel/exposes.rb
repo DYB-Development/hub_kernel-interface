@@ -65,6 +65,8 @@ module HubKernel
     end
 
     def within_account(account, &call)
+      raise UnwiredPortError, "hub_kernel's account scope is not filled" unless Context.scope
+
       Context.scope.call(account, &call)
     end
 

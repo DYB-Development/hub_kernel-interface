@@ -67,5 +67,11 @@ module HubKernel
     test "a hub's refusal reaches the caller with its reason unchanged" do
       assert_raises(HubKernel::Refused, match: "The soap shelf is full") { Stockroom.call_exposed("restock", values: { item: "soap" }, person: :sam, account: :acme) }
     end
+
+    test "a call made while the account scope is unset raises the unwired error" do
+      HubKernel::Context.scope = nil
+
+      assert_raises(HubKernel::UnwiredPortError, match: "hub_kernel's account scope is not filled") { Shop.call_exposed("price_of", values: { item: "soap" }, person: :sam, account: :acme) }
+    end
   end
 end
