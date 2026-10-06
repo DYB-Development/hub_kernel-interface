@@ -33,6 +33,7 @@ module HubKernel
 
     def refuse_without_caller(person, account)
       raise MissingArgumentError, "A call by name needs a person" if person.nil?
+      raise MissingArgumentError, "A call by name needs an account" if account.nil?
     end
 
     def allowed?(exposure, person, account)
