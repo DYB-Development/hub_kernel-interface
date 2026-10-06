@@ -1,5 +1,6 @@
 require "active_support/core_ext/string/inflections"
 require "hub_kernel/authz"
+require "hub_kernel/context"
 
 module HubKernel
   class MissingArgumentError < ArgumentError; end
@@ -21,6 +22,11 @@ module HubKernel
       refuse_without_caller(person, account)
 
       exposures.select { |exposure| allowed?(exposure, person, account) }
+    end
+
+    def call_exposed(name, values:, person:, account:)
+      exposure = exposed(name)
+      within_account(account) { public_send(exposure.name, **values.slice(*exposure.takes)) }
     end
 
     def exposure_problems
@@ -45,6 +51,10 @@ module HubKernel
       raise NonBooleanAnswerError, "The permission check must answer true or false, got #{answer.inspect}" unless [ true, false ].include?(answer)
 
       answer
+    end
+
+    def within_account(account, &call)
+      Context.scope.call(account, &call)
     end
 
     def exposure_problem(exposure)
