@@ -25,6 +25,12 @@ module HubKernel
 
         assert_equal FieldNotes, HubKernel::Interface.find("field_notes")
       end
+
+      test "a hub listed as a one-pair name and hub is served at the name given" do
+        HubKernel::Interface.hubs = [ { "notes" => FieldNotes } ]
+
+        assert_equal FieldNotes, HubKernel::Interface.find("notes")
+      end
     end
   end
 end

@@ -7,6 +7,9 @@ module HubKernel
 
     def self.hubs = @hubs ||= []
 
-    def self.find(name) = hubs.to_h { |hub| [ hub.name.demodulize.underscore, hub ] }[name]
+    def self.find(name) = served.to_h[name]
+
+    def self.served = hubs.flat_map { |entry| entry.is_a?(Hash) ? entry.to_a : [ [ entry.name.demodulize.underscore, entry ] ] }
+    private_class_method :served
   end
 end
