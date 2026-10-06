@@ -1,6 +1,7 @@
 require "active_support/core_ext/string/inflections"
 require "hub_kernel/authz"
 require "hub_kernel/context"
+require "hub_kernel/interface/exposing_hubs"
 
 module HubKernel
   class MissingArgumentError < ArgumentError; end
@@ -14,6 +15,7 @@ module HubKernel
     Exposed = Data.define(:name, :takes, :writes)
 
     def exposes(name, takes:, writes:)
+      Interface::ExposingHubs.add(self)
       exposed_methods[name.to_s] = Exposed.new(name: name, takes: takes, writes: writes)
     end
 

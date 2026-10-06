@@ -46,5 +46,9 @@ module HubKernel
     test "an exposed method that takes any values is not named for the values it is listed with" do
       assert_empty Barn.exposure_problems
     end
+
+    test "a hub that declares an exposed method is recorded as a hub that exposes methods" do
+      assert_includes HubKernel::Interface::ExposingHubs.list, Supplies
+    end
   end
 end
