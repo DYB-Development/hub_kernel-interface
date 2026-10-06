@@ -69,6 +69,12 @@ module HubKernel
 
         assert_equal({ "supplies" => Supplies, "notes" => FieldNotes }, HubKernel::Interface.served)
       end
+
+      test "an empty served list gives no names" do
+        HubKernel::Interface.hubs = []
+
+        assert_empty HubKernel::Interface.served
+      end
     end
   end
 end
