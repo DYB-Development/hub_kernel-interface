@@ -27,6 +27,8 @@ module HubKernel
     end
 
     def call_exposed(name, values:, person:, account:)
+      refuse_without_caller(person, account)
+
       exposure = exposed(name) || raise(UnexposedMethodError, "#{exposing_hub} does not expose #{name}")
       refuse_unless_allowed(exposure, person, account)
       refuse_missing_values(exposure, values)

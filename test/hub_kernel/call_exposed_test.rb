@@ -47,5 +47,9 @@ module HubKernel
     test "a call missing a value the method requires raises the missing-value error naming it" do
       assert_raises(HubKernel::MissingArgumentError, match: "Give item") { Shop.call_exposed("price_of", values: {}, person: :sam, account: :acme) }
     end
+
+    test "a call that names no person is refused before the method runs" do
+      assert_raises(HubKernel::MissingArgumentError, match: "A call by name needs a person") { Shop.call_exposed("price_of", values: { item: "soap" }, person: nil, account: :acme) }
+    end
   end
 end
