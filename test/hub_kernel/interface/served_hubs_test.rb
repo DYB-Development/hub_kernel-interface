@@ -63,6 +63,18 @@ module HubKernel
 
         assert_equal [ "field_notes:jot" ], asked
       end
+
+      test "an interface gem reads every served name with the hub served at it" do
+        HubKernel::Interface.hubs = [ Supplies, { "notes" => FieldNotes } ]
+
+        assert_equal({ "supplies" => Supplies, "notes" => FieldNotes }, HubKernel::Interface.served)
+      end
+
+      test "an empty served list gives no names" do
+        HubKernel::Interface.hubs = []
+
+        assert_empty HubKernel::Interface.served
+      end
     end
   end
 end
