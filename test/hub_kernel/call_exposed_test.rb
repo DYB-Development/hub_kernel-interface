@@ -18,6 +18,14 @@ module HubKernel
       def self.label(**values) = values
     end
 
+    module Stockroom
+      extend HubKernel::Exposes
+
+      exposes :restock, takes: %i[item], writes: true
+
+      def self.restock(item:) = raise(HubKernel::Refused, "The #{item} shelf is full")
+    end
+
     setup do
       @check, @scope = HubKernel::Authz.check, HubKernel::Context.scope
       HubKernel::Authz.check = ->(*) { true }
@@ -54,6 +62,10 @@ module HubKernel
 
     test "a call that names no account is refused before the method runs" do
       assert_raises(HubKernel::MissingArgumentError, match: "A call by name needs an account") { Shop.call_exposed("price_of", values: { item: "soap" }, person: :sam, account: nil) }
+    end
+
+    test "a hub's refusal reaches the caller with its reason unchanged" do
+      assert_raises(HubKernel::Refused, match: "The soap shelf is full") { Stockroom.call_exposed("restock", values: { item: "soap" }, person: :sam, account: :acme) }
     end
   end
 end

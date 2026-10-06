@@ -8,6 +8,7 @@ module HubKernel
   class NonBooleanAnswerError < StandardError; end
   class UnexposedMethodError < StandardError; end
   class NotAllowed < StandardError; end
+  class Refused < StandardError; end
 
   module Exposes
     Exposed = Data.define(:name, :takes, :writes)
