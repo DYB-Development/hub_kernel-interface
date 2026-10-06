@@ -29,6 +29,7 @@ module HubKernel
     def call_exposed(name, values:, person:, account:)
       exposure = exposed(name) || raise(UnexposedMethodError, "#{exposing_hub} does not expose #{name}")
       refuse_unless_allowed(exposure, person, account)
+      refuse_missing_values(exposure, values)
       within_account(account) { public_send(exposure.name, **values.slice(*exposure.takes)) }
     end
 
@@ -62,6 +63,11 @@ module HubKernel
 
     def within_account(account, &call)
       Context.scope.call(account, &call)
+    end
+
+    def refuse_missing_values(exposure, values)
+      missing = keywords(exposure, :keyreq) - values.keys
+      raise MissingArgumentError, "Give #{missing.join(", ")}" if missing.any?
     end
 
     def exposure_problem(exposure)
