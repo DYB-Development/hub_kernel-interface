@@ -6,5 +6,7 @@ module HubKernel
     singleton_class.attr_writer :hubs
 
     def self.hubs = @hubs ||= []
+
+    def self.find(name) = hubs.to_h { |hub| [ hub.name.demodulize.underscore, hub ] }[name]
   end
 end

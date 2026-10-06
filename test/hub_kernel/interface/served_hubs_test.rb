@@ -7,6 +7,10 @@ module HubKernel
         extend HubKernel::Exposes
       end
 
+      module FieldNotes
+        extend HubKernel::Exposes
+      end
+
       setup { @hubs = HubKernel::Interface.hubs }
       teardown { HubKernel::Interface.hubs = @hubs }
 
@@ -14,6 +18,12 @@ module HubKernel
         HubKernel::Interface.hubs = [ Supplies ]
 
         assert_equal [ Supplies ], HubKernel::Interface.hubs
+      end
+
+      test "a hub listed alone is served at its module name in snake case" do
+        HubKernel::Interface.hubs = [ FieldNotes ]
+
+        assert_equal FieldNotes, HubKernel::Interface.find("field_notes")
       end
     end
   end
