@@ -1,0 +1,68 @@
+require "test_helper"
+
+module HubKernel
+  module Interface
+    class ServedHubsTest < ActiveSupport::TestCase
+      module Supplies
+        extend HubKernel::Exposes
+      end
+
+      module FieldNotes
+        extend HubKernel::Exposes
+
+        exposes :jot, takes: [], writes: true
+
+        def self.jot = "noted"
+      end
+
+      setup { @hubs, @check = HubKernel::Interface.hubs, HubKernel::Authz.check }
+      teardown { HubKernel::Interface.hubs, HubKernel::Authz.check = @hubs, @check }
+
+      test "a host names its served hubs once and an interface gem reads that list" do
+        HubKernel::Interface.hubs = [ Supplies ]
+
+        assert_equal [ Supplies ], HubKernel::Interface.hubs
+      end
+
+      test "a hub listed alone is served at its module name in snake case" do
+        HubKernel::Interface.hubs = [ FieldNotes ]
+
+        assert_equal FieldNotes, HubKernel::Interface.find("field_notes")
+      end
+
+      test "a hub listed as a one-pair name and hub is served at the name given" do
+        HubKernel::Interface.hubs = [ { "notes" => FieldNotes } ]
+
+        assert_equal FieldNotes, HubKernel::Interface.find("notes")
+      end
+
+      test "a hub listed under a chosen name is not served at its module name" do
+        HubKernel::Interface.hubs = [ { "notes" => FieldNotes } ]
+
+        assert_nil HubKernel::Interface.find("field_notes")
+      end
+
+      test "the same hub listed alone and under a chosen name is served at both names" do
+        HubKernel::Interface.hubs = [ FieldNotes, { "notes" => FieldNotes } ]
+
+        assert_equal [ FieldNotes, FieldNotes ], [ HubKernel::Interface.find("field_notes"), HubKernel::Interface.find("notes") ]
+      end
+
+      test "a name no served hub answers at finds no hub" do
+        HubKernel::Interface.hubs = [ Supplies ]
+
+        assert_nil HubKernel::Interface.find("ledger")
+      end
+
+      test "the permission check is asked about a hub served under a chosen name by the hub's own name" do
+        asked = []
+        HubKernel::Authz.check = ->(_person, action, _account) { asked << action; true }
+        HubKernel::Interface.hubs = [ { "notes" => FieldNotes } ]
+
+        HubKernel::Interface.find("notes").exposures_for(person: :sam, account: :acme)
+
+        assert_equal [ "field_notes:jot" ], asked
+      end
+    end
+  end
+end
