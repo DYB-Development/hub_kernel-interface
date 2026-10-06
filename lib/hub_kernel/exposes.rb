@@ -10,6 +10,8 @@ module HubKernel
 
     def exposed(name) = exposed_methods[name.to_s]
 
+    def exposures = exposed_methods.values
+
     def exposure_problems
       exposed_methods.values.filter_map { |exposure| exposure_problem(exposure) }
     end
