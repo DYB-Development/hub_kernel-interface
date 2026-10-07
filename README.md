@@ -55,6 +55,11 @@ HubKernel::Interface.served           # => { "supplies" => Supplies, "money" => 
 The permission check is still asked about a hub served under a chosen name by its own name,
 such as `ledger:record_spend`.
 
+An interface gem's boot check runs `HubKernel::Interface.check!`, which raises
+`HubKernel::Interface::UnservableHubError` naming every problem in the served list at once:
+an entry that exposes no methods, two entries that answer at the same name, and each
+problem in a served hub's exposed list.
+
 `Supplies.exposure_problems` names each exposed method the hub has no method for, or lists
 with values it does not take. `HubKernel::Interface::ExposingHubs.list` holds every hub that
 declares an exposed method.
