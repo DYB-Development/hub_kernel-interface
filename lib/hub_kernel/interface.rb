@@ -12,7 +12,7 @@ module HubKernel
     def self.find(name) = served[name]
 
     def self.check!
-      problems = unexposed_hubs + shared_names
+      problems = unexposed_hubs + shared_names + exposure_problems
       raise UnservableHubError, problems.join("\n") if problems.any?
     end
 
@@ -24,8 +24,10 @@ module HubKernel
       end
     end
 
+    def self.exposure_problems = served.values.select { |hub| hub.respond_to?(:exposure_problems) }.flat_map(&:exposure_problems)
+
     def self.served_pairs = hubs.flat_map { |entry| entry.is_a?(Hash) ? entry.to_a : [ [ entry.name.demodulize.underscore, entry ] ] }
-    private_class_method :unexposed_hubs, :shared_names, :served_pairs
+    private_class_method :unexposed_hubs, :shared_names, :exposure_problems, :served_pairs
 
     def self.served = served_pairs.to_h
   end

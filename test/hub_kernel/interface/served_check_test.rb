@@ -14,6 +14,12 @@ module HubKernel
         extend HubKernel::Exposes
       end
 
+      module Cellar
+        extend HubKernel::Exposes
+
+        exposes :count_bottles, takes: [], writes: false
+      end
+
       setup { @hubs = HubKernel::Interface.hubs }
       teardown { HubKernel::Interface.hubs = @hubs }
 
@@ -27,6 +33,12 @@ module HubKernel
         HubKernel::Interface.hubs = [ Shop, { "shop" => Pantry } ]
 
         assert_raises(HubKernel::Interface::UnservableHubError, match: "HubKernel::Interface::ServedCheckTest::Shop and HubKernel::Interface::ServedCheckTest::Pantry both answer at shop") { HubKernel::Interface.check! }
+      end
+
+      test "a served hub whose exposed list has a problem has that problem named" do
+        HubKernel::Interface.hubs = [ Cellar ]
+
+        assert_raises(HubKernel::Interface::UnservableHubError, match: "Cellar exposes count_bottles, which it has no method for") { HubKernel::Interface.check! }
       end
     end
   end
