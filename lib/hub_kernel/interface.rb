@@ -16,7 +16,7 @@ module HubKernel
       raise UnservableHubError, problems.join("\n") if problems.any?
     end
 
-    def self.unexposed_hubs = served.values.reject { |hub| hub.respond_to?(:exposures) }.map { |hub| "#{hub.name} exposes no methods to serve" }
+    def self.unexposed_hubs = served.values.reject { |hub| hub.respond_to?(:exposures) && hub.exposures.any? }.map { |hub| "#{hub.name} exposes no methods to serve" }
 
     def self.shared_names
       served_pairs.group_by(&:first).select { |_name, pairs| pairs.size > 1 }.map do |name, pairs|

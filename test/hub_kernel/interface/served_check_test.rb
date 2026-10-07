@@ -61,6 +61,12 @@ module HubKernel
 
         assert_nothing_raised { HubKernel::Interface.check! }
       end
+
+      test "a served hub that uses the contract but declares no exposed methods is named" do
+        HubKernel::Interface.hubs = [ Pantry ]
+
+        assert_raises(HubKernel::Interface::UnservableHubError, match: "HubKernel::Interface::ServedCheckTest::Pantry exposes no methods to serve") { HubKernel::Interface.check! }
+      end
     end
   end
 end
