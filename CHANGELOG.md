@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-10-06
+
+### Added
+- `allows?`, which asks the permission check about one exposed method.
+
+### Fixed
+- `CallReasons.refuse_unlisted_values` asks the permission check nothing for a call that sends only listed values, and once about the called method otherwise, rather than about every exposed method on every call.
+
 ## [0.5.0] - 2026-10-06
 
 ### Added

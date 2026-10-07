@@ -68,9 +68,13 @@ HubKernel::Interface::CallReasons.refuse_unlisted_values(Supplies, "price_of", v
 HubKernel::Interface::CallReasons.missing_record(error) # => "No consumable has the id 7"
 ```
 
-`refuse_unlisted_values` raises `HubKernel::NotAllowed` when the permission check refuses the
-call, whatever values it sends, and otherwise raises `HubKernel::Refused` naming the method and
-every value it is not listed with. `missing_record` reads the error's `model` and `id`.
+`refuse_unlisted_values` does nothing for a call that sends only listed values, and asks the
+permission check nothing. For a call that sends any other value, it asks the permission check
+once about the called method, raises `HubKernel::NotAllowed` when it refuses, and otherwise
+raises `HubKernel::Refused` naming the method and every value it is not listed with.
+
+`Supplies.allows?("price_of", person: person, account: account)` asks the permission check
+about that one method. `missing_record` reads the error's `model` and `id`.
 
 `Supplies.exposure_problems` names each exposed method the hub has no method for, or lists
 with values it does not take. `HubKernel::Interface::ExposingHubs.list` holds every hub that
