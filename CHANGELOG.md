@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-06
+
+### Added
+- `HubKernel::Interface.check!`, which raises `HubKernel::Interface::UnservableHubError` naming every problem in the served list.
+
 ## [0.3.0] - 2026-10-06
 
 ### Added
