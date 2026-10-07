@@ -8,8 +8,11 @@ module HubKernel
         extend HubKernel::Exposes
 
         exposes :price_of, takes: %i[item], writes: false
+        exposes :restock, takes: %i[item], writes: true
 
         def self.price_of(item:) = item
+
+        def self.restock(item:) = item
       end
 
       setup do
@@ -50,6 +53,14 @@ module HubKernel
         CallReasons.refuse_unlisted_values(Shop, "price_of", values: { item: "soap" }, person: :sam, account: :acme)
 
         assert_empty asked
+      end
+
+      test "a call that sends an unlisted value asks the permission check once about that one method" do
+        asked = []
+        HubKernel::Authz.check = ->(_person, action, _account) { asked << action; true }
+
+        assert_raises(HubKernel::Refused) { CallReasons.refuse_unlisted_values(Shop, "price_of", values: { item: "soap", colour: "red" }, person: :sam, account: :acme) }
+        assert_equal [ "shop:price_of" ], asked
       end
     end
   end
