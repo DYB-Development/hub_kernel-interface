@@ -8,3 +8,5 @@ Rake::TestTask.new(:test) do |task|
 end
 
 task default: :test
+
+require "the_local/rake"
