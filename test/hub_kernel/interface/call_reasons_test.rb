@@ -8,8 +8,11 @@ module HubKernel
         extend HubKernel::Exposes
 
         exposes :price_of, takes: %i[item], writes: false
+        exposes :restock, takes: %i[item], writes: true
 
         def self.price_of(item:) = item
+
+        def self.restock(item:) = item
       end
 
       setup do
@@ -41,6 +44,23 @@ module HubKernel
         missing = Struct.new(:model, :id).new("Console::Planned::Consumable", 7)
 
         assert_equal "No consumable has the id 7", CallReasons.missing_record(missing)
+      end
+
+      test "a call that sends only listed values asks the permission check nothing" do
+        asked = []
+        HubKernel::Authz.check = ->(_person, action, _account) { asked << action; true }
+
+        CallReasons.refuse_unlisted_values(Shop, "price_of", values: { item: "soap" }, person: :sam, account: :acme)
+
+        assert_empty asked
+      end
+
+      test "a call that sends an unlisted value asks the permission check once about that one method" do
+        asked = []
+        HubKernel::Authz.check = ->(_person, action, _account) { asked << action; true }
+
+        assert_raises(HubKernel::Refused) { CallReasons.refuse_unlisted_values(Shop, "price_of", values: { item: "soap", colour: "red" }, person: :sam, account: :acme) }
+        assert_equal [ "shop:price_of" ], asked
       end
     end
   end

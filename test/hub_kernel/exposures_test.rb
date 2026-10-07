@@ -45,5 +45,12 @@ module HubKernel
 
       assert_raises(HubKernel::NonBooleanAnswerError, match: 'The permission check must answer true or false, got "yes"') { Shop.exposures_for(person: :sam, account: :acme) }
     end
+
+    test "a hub answers whether the permission check allows one method by asking about that method alone" do
+      asked = []
+      HubKernel::Authz.check = ->(_person, action, _account) { asked << action; action == "shop:restock" }
+
+      assert_equal [ true, [ "shop:restock" ] ], [ Shop.allows?("restock", person: :sam, account: :acme), asked ]
+    end
   end
 end

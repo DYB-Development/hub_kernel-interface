@@ -4,9 +4,10 @@ module HubKernel
   module Interface
     module CallReasons
       def self.refuse_unlisted_values(hub, name, values:, person:, account:)
-        raise HubKernel::NotAllowed, "#{hub.name.demodulize} #{name}" unless hub.exposures_for(person: person, account: account).any? { |exposure| exposure.name.to_s == name.to_s }
-
         unlisted = values.keys - hub.exposed(name).takes
+        return if unlisted.none?
+
+        raise HubKernel::NotAllowed, "#{hub.name.demodulize} #{name}" unless hub.allows?(name, person: person, account: account)
         raise HubKernel::Refused, "#{name} does not take #{unlisted.join(", ")}" if unlisted.any?
       end
 
