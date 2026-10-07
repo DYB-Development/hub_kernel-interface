@@ -40,6 +40,13 @@ module HubKernel
 
         assert_raises(HubKernel::Interface::UnservableHubError, match: "Cellar exposes count_bottles, which it has no method for") { HubKernel::Interface.check! }
       end
+
+      test "every problem in a list is named in one error raised by the check" do
+        HubKernel::Interface.hubs = [ Bakery, Cellar ]
+
+        error = assert_raises(HubKernel::Interface::UnservableHubError) { HubKernel::Interface.check! }
+        assert_equal [ "HubKernel::Interface::ServedCheckTest::Bakery exposes no methods to serve", "Cellar exposes count_bottles, which it has no method for" ], error.message.lines(chomp: true)
+      end
     end
   end
 end
