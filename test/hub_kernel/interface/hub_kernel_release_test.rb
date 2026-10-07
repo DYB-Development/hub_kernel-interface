@@ -13,4 +13,8 @@ class HubKernelReleaseTest < ActiveSupport::TestCase
 
     assert_equal "hub_kernel 0.18.0 still defines the contract hub_kernel-interface holds, so upgrade hub_kernel to 0.19.0 or later", error.message
   end
+
+  test "no hub_kernel loaded is allowed" do
+    assert_nil HubKernel::Interface::HubKernelRelease.refuse_older!(nil)
+  end
 end
