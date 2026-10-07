@@ -29,6 +29,12 @@ module HubKernel
       exposures.select { |exposure| allowed?(exposure, person, account) }
     end
 
+    def allows?(name, person:, account:)
+      refuse_without_caller(person, account)
+
+      allowed?(exposed(name), person, account)
+    end
+
     def call_exposed(name, values:, person:, account:)
       refuse_without_caller(person, account)
 
