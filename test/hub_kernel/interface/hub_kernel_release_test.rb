@@ -17,4 +17,8 @@ class HubKernelReleaseTest < ActiveSupport::TestCase
   test "no hub_kernel loaded is allowed" do
     assert_nil HubKernel::Interface::HubKernelRelease.refuse_older!(nil)
   end
+
+  test "the first hub_kernel release built on hub_kernel-interface is allowed" do
+    assert_nil HubKernel::Interface::HubKernelRelease.refuse_older!(hub_kernel("0.19.0"))
+  end
 end
