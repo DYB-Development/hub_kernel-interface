@@ -1,0 +1,12 @@
+require "hub_kernel/exposes"
+
+module HubKernel
+  module Interface
+    module CallReasons
+      def self.refuse_unlisted_values(hub, name, values:, person:, account:)
+        unlisted = values.keys - hub.exposed(name).takes
+        raise HubKernel::Refused, "#{name} does not take #{unlisted.join(", ")}" if unlisted.any?
+      end
+    end
+  end
+end
