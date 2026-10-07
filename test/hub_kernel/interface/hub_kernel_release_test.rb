@@ -7,4 +7,10 @@ class HubKernelReleaseTest < ActiveSupport::TestCase
   test "a hub_kernel release older than the first one built on hub_kernel-interface is refused" do
     assert_raises(HubKernel::Interface::OlderHubKernelError) { HubKernel::Interface::HubKernelRelease.refuse_older!(hub_kernel("0.18.0")) }
   end
+
+  test "the refusal names the hub_kernel release to upgrade to" do
+    error = assert_raises(HubKernel::Interface::OlderHubKernelError) { HubKernel::Interface::HubKernelRelease.refuse_older!(hub_kernel("0.18.0")) }
+
+    assert_equal "hub_kernel 0.18.0 still defines the contract hub_kernel-interface holds, so upgrade hub_kernel to 0.19.0 or later", error.message
+  end
 end
