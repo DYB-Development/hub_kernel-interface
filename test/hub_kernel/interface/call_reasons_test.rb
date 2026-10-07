@@ -36,6 +36,12 @@ module HubKernel
           CallReasons.refuse_unlisted_values(Shop, "price_of", values: { item: "soap" }, person: :sam, account: :acme)
         end
       end
+
+      test "a missing record is described by its kind in lower-case words and its id" do
+        missing = Struct.new(:model, :id).new("Console::Planned::Consumable", 7)
+
+        assert_equal "No consumable has the id 7", CallReasons.missing_record(missing)
+      end
     end
   end
 end

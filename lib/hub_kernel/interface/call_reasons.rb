@@ -9,6 +9,8 @@ module HubKernel
         unlisted = values.keys - hub.exposed(name).takes
         raise HubKernel::Refused, "#{name} does not take #{unlisted.join(", ")}" if unlisted.any?
       end
+
+      def self.missing_record(missing) = "No #{missing.model.demodulize.underscore.humanize(capitalize: false)} has the id #{missing.id}"
     end
   end
 end
