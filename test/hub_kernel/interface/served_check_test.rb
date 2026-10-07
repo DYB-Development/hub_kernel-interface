@@ -20,6 +20,14 @@ module HubKernel
         exposes :count_bottles, takes: [], writes: false
       end
 
+      module Larder
+        extend HubKernel::Exposes
+
+        exposes :count_jars, takes: [], writes: false
+
+        def self.count_jars = 4
+      end
+
       setup { @hubs = HubKernel::Interface.hubs }
       teardown { HubKernel::Interface.hubs = @hubs }
 
@@ -46,6 +54,12 @@ module HubKernel
 
         error = assert_raises(HubKernel::Interface::UnservableHubError) { HubKernel::Interface.check! }
         assert_equal [ "HubKernel::Interface::ServedCheckTest::Bakery exposes no methods to serve", "Cellar exposes count_bottles, which it has no method for" ], error.message.lines(chomp: true)
+      end
+
+      test "a correct served list passes the check" do
+        HubKernel::Interface.hubs = [ Larder, { "jars" => Larder } ]
+
+        assert_nothing_raised { HubKernel::Interface.check! }
       end
     end
   end
