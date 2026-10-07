@@ -1,4 +1,6 @@
 require "hub_kernel/interface/version"
+require "hub_kernel/interface/hub_kernel_release"
+HubKernel::Interface::HubKernelRelease.refuse_older!(Gem.loaded_specs["hub_kernel"])
 require "hub_kernel/exposes"
 require "hub_kernel/interface/call_reasons"
 

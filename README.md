@@ -86,6 +86,11 @@ declares an exposed method.
 gem "hub_kernel-interface"
 ```
 
+hub_kernel releases before 0.19.0 define this contract themselves. Loading hub_kernel-interface
+beside one raises `HubKernel::Interface::OlderHubKernelError`, which names the hub_kernel
+release to upgrade to. An app with no hub_kernel, or with hub_kernel 0.19.0 or later, loads it
+as usual.
+
 ## License
 
 The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).

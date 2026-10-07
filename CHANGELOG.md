@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-10-07
+
+### Added
+- Loading hub_kernel-interface beside a hub_kernel release older than 0.19.0 raises `HubKernel::Interface::OlderHubKernelError`, naming the hub_kernel release to upgrade to.
+
 ## [0.7.0] - 2026-10-07
 
 ### Added
