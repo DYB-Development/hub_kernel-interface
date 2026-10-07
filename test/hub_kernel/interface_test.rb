@@ -9,5 +9,12 @@ module HubKernel
 
       assert_equal "exposed", output
     end
+
+    test "requiring the gem alone is enough to give call reasons" do
+      script = 'require "hub_kernel-interface"; print HubKernel::Interface::CallReasons.missing_record(Struct.new(:model, :id).new("Shop", 1))'
+      output, = Open3.capture2e(RbConfig.ruby, "-I", File.expand_path("../../lib", __dir__), "-e", script)
+
+      assert_equal "No shop has the id 1", output
+    end
   end
 end

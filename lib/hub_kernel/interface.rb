@@ -1,5 +1,6 @@
 require "hub_kernel/interface/version"
 require "hub_kernel/exposes"
+require "hub_kernel/interface/call_reasons"
 
 module HubKernel
   module Interface

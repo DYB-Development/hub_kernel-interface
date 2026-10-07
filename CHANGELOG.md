@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-06
+
+### Added
+- `HubKernel::Interface::CallReasons`, which refuses a call's unlisted values after the permission check and describes a missing record by its kind and id.
+
 ## [0.4.0] - 2026-10-06
 
 ### Added
