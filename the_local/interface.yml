@@ -1,0 +1,39 @@
+scope: hub interface contract — a hub declaring the methods outside callers may reach by name, calling one by name for a person and an account behind the permission check and account scope, the host's one list of served hubs and its boot check, and the reasons every interface gives for an unlisted value or a missing record
+
+install:
+  - gem "hub_kernel-interface"
+  - HubKernel::Interface.hubs=
+  - HubKernel::Authz.check=
+  - HubKernel::Context.scope=
+
+develop:
+  - HubKernel::Exposes
+  - exposes
+  - exposed
+  - exposures
+  - exposures_for
+  - allows?
+  - call_exposed
+  - exposure_problems
+  - HubKernel::Interface.find
+  - HubKernel::Interface.served
+  - HubKernel::Interface.check!
+  - HubKernel::Interface::UnservableHubError
+  - HubKernel::Interface::CallReasons.refuse_unlisted_values
+  - HubKernel::Interface::CallReasons.missing_record
+  - HubKernel::Interface::ExposingHubs.list
+  - HubKernel::UnexposedMethodError
+  - HubKernel::NotAllowed
+  - HubKernel::Refused
+  - HubKernel::MissingArgumentError
+  - HubKernel::UnwiredPortError
+  - HubKernel::NonBooleanAnswerError
+
+sources:
+  - lib/hub_kernel/interface.rb
+  - lib/hub_kernel/exposes.rb
+  - lib/hub_kernel/authz.rb
+  - lib/hub_kernel/context.rb
+  - lib/hub_kernel/interface/call_reasons.rb
+  - lib/hub_kernel/interface/exposing_hubs.rb
+  - README.md
