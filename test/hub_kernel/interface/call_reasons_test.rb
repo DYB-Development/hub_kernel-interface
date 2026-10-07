@@ -24,6 +24,12 @@ module HubKernel
           CallReasons.refuse_unlisted_values(Shop, "price_of", values: { item: "soap", colour: "red", size: 2 }, person: :sam, account: :acme)
         end
       end
+
+      test "a call the permission check refuses is refused as not allowed whatever values it sends" do
+        assert_raises(HubKernel::NotAllowed) do
+          CallReasons.refuse_unlisted_values(Shop, "price_of", values: { item: "soap", colour: "red" }, person: :lee, account: :acme)
+        end
+      end
     end
   end
 end
