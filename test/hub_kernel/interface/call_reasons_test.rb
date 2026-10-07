@@ -42,6 +42,15 @@ module HubKernel
 
         assert_equal "No consumable has the id 7", CallReasons.missing_record(missing)
       end
+
+      test "a call that sends only listed values asks the permission check nothing" do
+        asked = []
+        HubKernel::Authz.check = ->(_person, action, _account) { asked << action; true }
+
+        CallReasons.refuse_unlisted_values(Shop, "price_of", values: { item: "soap" }, person: :sam, account: :acme)
+
+        assert_empty asked
+      end
     end
   end
 end
