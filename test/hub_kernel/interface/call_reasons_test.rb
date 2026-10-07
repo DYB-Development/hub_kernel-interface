@@ -30,6 +30,12 @@ module HubKernel
           CallReasons.refuse_unlisted_values(Shop, "price_of", values: { item: "soap", colour: "red" }, person: :lee, account: :acme)
         end
       end
+
+      test "a call that sends only listed values goes on to the method" do
+        assert_nothing_raised do
+          CallReasons.refuse_unlisted_values(Shop, "price_of", values: { item: "soap" }, person: :sam, account: :acme)
+        end
+      end
     end
   end
 end
