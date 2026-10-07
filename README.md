@@ -60,6 +60,18 @@ An interface gem's boot check runs `HubKernel::Interface.check!`, which raises
 an entry that exposes no methods, two entries that answer at the same name, and each
 problem in a served hub's exposed list.
 
+An interface gem checks a call's values before calling, and describes a record the call
+named that does not exist, so every interface gives the same reasons:
+
+```ruby
+HubKernel::Interface::CallReasons.refuse_unlisted_values(Supplies, "price_of", values: values, person: person, account: account)
+HubKernel::Interface::CallReasons.missing_record(error) # => "No consumable has the id 7"
+```
+
+`refuse_unlisted_values` raises `HubKernel::NotAllowed` when the permission check refuses the
+call, whatever values it sends, and otherwise raises `HubKernel::Refused` naming the method and
+every value it is not listed with. `missing_record` reads the error's `model` and `id`.
+
 `Supplies.exposure_problems` names each exposed method the hub has no method for, or lists
 with values it does not take. `HubKernel::Interface::ExposingHubs.list` holds every hub that
 declares an exposed method.
