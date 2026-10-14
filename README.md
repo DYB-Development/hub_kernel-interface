@@ -40,9 +40,11 @@ for a missing person, account or required value. A hub refuses with `HubKernel::
 reason a person can read. A call made while the permission check or the account scope is unset
 raises `HubKernel::UnwiredPortError`.
 
-The host names the hubs every interface serves, once. A hub listed alone is served at its
+Every interface serves every hub that exposes a method, each at its module name in snake
+case, unless the host names the hubs to serve, once. A hub listed alone is served at its
 module name in snake case, and a hub listed as a one-pair hash is served only at the name
-given. An interface gem finds the hub served at a name, or `nil` when none is:
+given. Setting the list to `nil` serves every exposing hub again. An interface gem finds the
+hub served at a name, or `nil` when none is:
 
 ```ruby
 HubKernel::Interface.hubs = [ Supplies, { "money" => Billing::Ledger } ]
@@ -54,6 +56,14 @@ HubKernel::Interface.served           # => { "supplies" => Supplies, "money" => 
 
 The permission check is still asked about a hub served under a chosen name by its own name,
 such as `ledger:record_spend`.
+
+The host names the methods that give the calling person and account once, here, for an
+interface gem to read:
+
+```ruby
+HubKernel::Interface.person_method = :hub_person
+HubKernel::Interface.account_method = :hub_account
+```
 
 An interface gem's boot check runs `HubKernel::Interface.check!`, which raises
 `HubKernel::Interface::UnservableHubError` naming every problem in the served list at once:

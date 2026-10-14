@@ -2,6 +2,7 @@ require "hub_kernel/interface/version"
 require "hub_kernel/interface/hub_kernel_release"
 HubKernel::Interface::HubKernelRelease.refuse_older!(Gem.loaded_specs["hub_kernel"])
 require "hub_kernel/exposes"
+require "hub_kernel/interface/exposing_hubs"
 require "hub_kernel/interface/call_reasons"
 
 module HubKernel
@@ -9,8 +10,9 @@ module HubKernel
     class UnservableHubError < StandardError; end
 
     singleton_class.attr_writer :hubs
+    singleton_class.attr_accessor :person_method, :account_method
 
-    def self.hubs = @hubs ||= []
+    def self.hubs = @hubs || ExposingHubs.list.dup
 
     def self.find(name) = served[name]
 

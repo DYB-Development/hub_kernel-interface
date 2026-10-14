@@ -15,8 +15,11 @@ module HubKernel
         def self.jot = "noted"
       end
 
-      setup { @hubs, @check = HubKernel::Interface.hubs, HubKernel::Authz.check }
-      teardown { HubKernel::Interface.hubs, HubKernel::Authz.check = @hubs, @check }
+      setup { @hubs, @check, @exposing = HubKernel::Interface.hubs, HubKernel::Authz.check, ExposingHubs.list.dup }
+      teardown do
+        HubKernel::Interface.hubs, HubKernel::Authz.check = @hubs, @check
+        ExposingHubs.list.replace(@exposing)
+      end
 
       test "a host names its served hubs once and an interface gem reads that list" do
         HubKernel::Interface.hubs = [ Supplies ]
@@ -70,10 +73,33 @@ module HubKernel
         assert_equal({ "supplies" => Supplies, "notes" => FieldNotes }, HubKernel::Interface.served)
       end
 
+      test "with no served list set, every hub that exposes a method is served at its own name" do
+        ExposingHubs.list.replace([ FieldNotes ])
+        HubKernel::Interface.hubs = nil
+
+        assert_equal({ "field_notes" => FieldNotes }, HubKernel::Interface.served)
+      end
+
+      test "a host that sets a served list gets exactly that list served, not every hub that exposes a method" do
+        ExposingHubs.list.replace([ FieldNotes ])
+        HubKernel::Interface.hubs = [ Supplies ]
+
+        assert_equal({ "supplies" => Supplies }, HubKernel::Interface.served)
+      end
+
       test "an empty served list gives no names" do
         HubKernel::Interface.hubs = []
 
         assert_empty HubKernel::Interface.served
+      end
+
+      test "adding to the default served list leaves the list of hubs that expose methods unchanged" do
+        ExposingHubs.list.replace([ FieldNotes ])
+        HubKernel::Interface.hubs = nil
+
+        HubKernel::Interface.hubs << Supplies
+
+        assert_equal [ FieldNotes ], ExposingHubs.list
       end
     end
   end
