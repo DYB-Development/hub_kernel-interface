@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-10-14
+
 ### Added
 - With no served list set, `HubKernel::Interface.hubs` is every hub that exposes a method, each served at its own name, and setting it to `nil` restores that default.
 - `HubKernel::Interface.person_method` and `HubKernel::Interface.account_method`, where a host names the methods that give the calling person and account once for every interface gem.
