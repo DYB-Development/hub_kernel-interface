@@ -28,8 +28,11 @@ module HubKernel
         def self.count_jars = 4
       end
 
-      setup { @hubs = HubKernel::Interface.hubs }
-      teardown { HubKernel::Interface.hubs = @hubs }
+      setup { @hubs, @exposing = HubKernel::Interface.hubs, ExposingHubs.list.dup }
+      teardown do
+        HubKernel::Interface.hubs = @hubs
+        ExposingHubs.list.replace(@exposing)
+      end
 
       test "a served entry that exposes no methods is named as exposing no methods to serve" do
         HubKernel::Interface.hubs = [ Bakery ]
@@ -54,6 +57,13 @@ module HubKernel
 
         error = assert_raises(HubKernel::Interface::UnservableHubError) { HubKernel::Interface.check! }
         assert_equal [ "HubKernel::Interface::ServedCheckTest::Bakery exposes no methods to serve", "Cellar exposes count_bottles, which it has no method for" ], error.message.lines(chomp: true)
+      end
+
+      test "a hub served by default whose exposed list has a problem has that problem named" do
+        ExposingHubs.list.replace([ Cellar ])
+        HubKernel::Interface.hubs = nil
+
+        assert_raises(HubKernel::Interface::UnservableHubError, match: "Cellar exposes count_bottles, which it has no method for") { HubKernel::Interface.check! }
       end
 
       test "a correct served list passes the check" do
