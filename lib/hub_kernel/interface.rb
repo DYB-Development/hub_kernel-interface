@@ -10,6 +10,7 @@ module HubKernel
     class UnservableHubError < StandardError; end
 
     singleton_class.attr_writer :hubs
+    singleton_class.attr_accessor :person_method, :account_method
 
     def self.hubs = @hubs || ExposingHubs.list
 
