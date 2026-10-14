@@ -80,6 +80,13 @@ module HubKernel
         assert_equal({ "field_notes" => FieldNotes }, HubKernel::Interface.served)
       end
 
+      test "a host that sets a served list gets exactly that list served, not every hub that exposes a method" do
+        ExposingHubs.list.replace([ FieldNotes ])
+        HubKernel::Interface.hubs = [ Supplies ]
+
+        assert_equal({ "supplies" => Supplies }, HubKernel::Interface.served)
+      end
+
       test "an empty served list gives no names" do
         HubKernel::Interface.hubs = []
 
