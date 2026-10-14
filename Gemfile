@@ -11,4 +11,4 @@ gem "rake"
 gem "rubocop-rails-omakase", require: false
 
 # Authors and checks the gem's expert agents [https://github.com/tylercschneider/the_local]
-gem "the_local", "~> 0.4.1"
+gem "the_local", "~> 0.4.3"
