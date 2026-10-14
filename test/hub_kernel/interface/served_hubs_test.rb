@@ -92,6 +92,15 @@ module HubKernel
 
         assert_empty HubKernel::Interface.served
       end
+
+      test "adding to the default served list leaves the list of hubs that expose methods unchanged" do
+        ExposingHubs.list.replace([ FieldNotes ])
+        HubKernel::Interface.hubs = nil
+
+        HubKernel::Interface.hubs << Supplies
+
+        assert_equal [ FieldNotes ], ExposingHubs.list
+      end
     end
   end
 end
