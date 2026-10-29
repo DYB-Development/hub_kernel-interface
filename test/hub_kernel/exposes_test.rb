@@ -47,6 +47,10 @@ module HubKernel
       assert_empty Barn.exposure_problems
     end
 
+    test "a method exposed without earlier answers reads as having none" do
+      assert_empty Supplies.exposed("record_purchase").earlier_answers
+    end
+
     test "a hub that declares an exposed method is recorded as a hub that exposes methods" do
       assert_includes HubKernel::Interface::ExposingHubs.list, Supplies
     end

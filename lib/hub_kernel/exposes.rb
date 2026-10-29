@@ -12,11 +12,11 @@ module HubKernel
   class Refused < StandardError; end
 
   module Exposes
-    Exposed = Data.define(:name, :takes, :writes)
+    Exposed = Data.define(:name, :takes, :writes, :earlier_answers)
 
     def exposes(name, takes:, writes:)
       Interface::ExposingHubs.add(self)
-      exposed_methods[name.to_s] = Exposed.new(name: name, takes: takes, writes: writes)
+      exposed_methods[name.to_s] = Exposed.new(name: name, takes: takes, writes: writes, earlier_answers: [])
     end
 
     def exposed(name) = exposed_methods[name.to_s]
