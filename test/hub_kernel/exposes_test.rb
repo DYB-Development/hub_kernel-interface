@@ -43,6 +43,12 @@ module HubKernel
       exposes :price_of, takes: %i[item], writes: false, earlier_answers: { 1 => ->(answer) { answer[:price] }, 2 => ->(answer) { { price: answer[:cents] } } }
     end
 
+    module Butcher
+      extend HubKernel::Exposes
+
+      exposes :weigh_cut, takes: %i[cut], writes: false, answer_shape: { "type" => "integer" }
+    end
+
     test "an exposed method is found by its name with the values it takes" do
       assert_equal %i[supplier_id bought_on lines], Supplies.exposed("record_purchase").takes
     end
@@ -77,6 +83,10 @@ module HubKernel
 
     test "an earlier answer given only a translation reads as having no answer shape" do
       assert_nil Grocer.exposed("price_of").earlier_answer(1).answer_shape
+    end
+
+    test "a method is exposed with the JSON Schema of its answer as its answer shape" do
+      assert_equal({ "type" => "integer" }, Butcher.exposed("weigh_cut").answer_shape)
     end
 
     test "a hub that declares an exposed method is recorded as a hub that exposes methods" do

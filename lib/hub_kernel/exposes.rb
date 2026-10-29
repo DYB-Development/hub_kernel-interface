@@ -19,9 +19,9 @@ module HubKernel
       def translate(answer) = translation.call(answer)
     end
 
-    def exposes(name, takes:, writes:, earlier_answers: {})
+    def exposes(name, takes:, writes:, earlier_answers: {}, answer_shape: nil)
       Interface::ExposingHubs.add(self)
-      exposed_methods[name.to_s] = Exposed.new(name: name, takes: takes, writes: writes, earlier_answers: earlier_answers.map { |major, translation| EarlierAnswer.new(major: major, translation: translation, answer_shape: nil) }, answer_shape: nil)
+      exposed_methods[name.to_s] = Exposed.new(name: name, takes: takes, writes: writes, earlier_answers: earlier_answers.map { |major, translation| EarlierAnswer.new(major: major, translation: translation, answer_shape: nil) }, answer_shape: answer_shape)
     end
 
     def exposed(name) = exposed_methods[name.to_s]
