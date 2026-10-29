@@ -15,13 +15,13 @@ module HubKernel
     Exposed = Data.define(:name, :takes, :writes, :earlier_answers, :answer_shape) do
       def earlier_answer(major) = earlier_answers.find { |earlier| earlier.major == major }
     end
-    EarlierAnswer = Data.define(:major, :translation) do
+    EarlierAnswer = Data.define(:major, :translation, :answer_shape) do
       def translate(answer) = translation.call(answer)
     end
 
     def exposes(name, takes:, writes:, earlier_answers: {})
       Interface::ExposingHubs.add(self)
-      exposed_methods[name.to_s] = Exposed.new(name: name, takes: takes, writes: writes, earlier_answers: earlier_answers.map { |major, translation| EarlierAnswer.new(major: major, translation: translation) }, answer_shape: nil)
+      exposed_methods[name.to_s] = Exposed.new(name: name, takes: takes, writes: writes, earlier_answers: earlier_answers.map { |major, translation| EarlierAnswer.new(major: major, translation: translation, answer_shape: nil) }, answer_shape: nil)
     end
 
     def exposed(name) = exposed_methods[name.to_s]

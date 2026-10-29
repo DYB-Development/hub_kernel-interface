@@ -75,6 +75,10 @@ module HubKernel
       assert_nil Supplies.exposed("record_purchase").answer_shape
     end
 
+    test "an earlier answer given only a translation reads as having no answer shape" do
+      assert_nil Grocer.exposed("price_of").earlier_answer(1).answer_shape
+    end
+
     test "a hub that declares an exposed method is recorded as a hub that exposes methods" do
       assert_includes HubKernel::Interface::ExposingHubs.list, Supplies
     end
