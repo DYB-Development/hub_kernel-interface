@@ -31,6 +31,12 @@ module HubKernel
       def self.add_bale(**fields) = fields
     end
 
+    module Grocer
+      extend HubKernel::Exposes
+
+      exposes :price_of, takes: %i[item], writes: false, earlier_answers: { 1 => ->(answer) { answer.except(:currency) } }
+    end
+
     test "an exposed method is found by its name with the values it takes" do
       assert_equal %i[supplier_id bought_on lines], Supplies.exposed("record_purchase").takes
     end
@@ -49,6 +55,10 @@ module HubKernel
 
     test "a method exposed without earlier answers reads as having none" do
       assert_empty Supplies.exposed("record_purchase").earlier_answers
+    end
+
+    test "an earlier answer is declared for a numbered major as a translation from the answer of the major after it" do
+      assert_equal [ [ 1, { cents: 300 } ] ], Grocer.exposed("price_of").earlier_answers.map { |earlier| [ earlier.major, earlier.translate({ cents: 300, currency: "usd" }) ] }
     end
 
     test "a hub that declares an exposed method is recorded as a hub that exposes methods" do
