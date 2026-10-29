@@ -71,6 +71,10 @@ module HubKernel
       assert_equal({ price: 300 }, Baker.exposed("price_of").earlier_answer(2).translate({ cents: 300 }))
     end
 
+    test "a method exposed without an answer shape reads as having none" do
+      assert_nil Supplies.exposed("record_purchase").answer_shape
+    end
+
     test "a hub that declares an exposed method is recorded as a hub that exposes methods" do
       assert_includes HubKernel::Interface::ExposingHubs.list, Supplies
     end
