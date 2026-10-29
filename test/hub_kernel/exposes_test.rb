@@ -43,6 +43,18 @@ module HubKernel
       exposes :price_of, takes: %i[item], writes: false, earlier_answers: { 1 => ->(answer) { answer[:price] }, 2 => ->(answer) { { price: answer[:cents] } } }
     end
 
+    module Butcher
+      extend HubKernel::Exposes
+
+      exposes :weigh_cut, takes: %i[cut], writes: false, answer_shape: { "type" => "integer" }
+    end
+
+    module Florist
+      extend HubKernel::Exposes
+
+      exposes :price_of, takes: %i[item], writes: false, earlier_answers: { 1 => { translation: ->(answer) { answer.to_s }, answer_shape: { "type" => "string" } } }
+    end
+
     test "an exposed method is found by its name with the values it takes" do
       assert_equal %i[supplier_id bought_on lines], Supplies.exposed("record_purchase").takes
     end
@@ -69,6 +81,26 @@ module HubKernel
 
     test "an earlier answer an exposed method declares is read by its major number" do
       assert_equal({ price: 300 }, Baker.exposed("price_of").earlier_answer(2).translate({ cents: 300 }))
+    end
+
+    test "a method exposed without an answer shape reads as having none" do
+      assert_nil Supplies.exposed("record_purchase").answer_shape
+    end
+
+    test "an earlier answer given only a translation reads as having no answer shape" do
+      assert_nil Grocer.exposed("price_of").earlier_answer(1).answer_shape
+    end
+
+    test "a method is exposed with the JSON Schema of its answer as its answer shape" do
+      assert_equal({ "type" => "integer" }, Butcher.exposed("weigh_cut").answer_shape)
+    end
+
+    test "an earlier answer is given the JSON Schema of the answer at its major beside its translation" do
+      assert_equal({ "type" => "string" }, Florist.exposed("price_of").earlier_answer(1).answer_shape)
+    end
+
+    test "an earlier answer given a translation beside its answer shape translates the answer of the major after it" do
+      assert_equal "300", Florist.exposed("price_of").earlier_answer(1).translate(300)
     end
 
     test "a hub that declares an exposed method is recorded as a hub that exposes methods" do
