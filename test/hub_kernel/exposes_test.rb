@@ -99,6 +99,10 @@ module HubKernel
       assert_equal({ "type" => "string" }, Florist.exposed("price_of").earlier_answer(1).answer_shape)
     end
 
+    test "an earlier answer given a translation beside its answer shape translates the answer of the major after it" do
+      assert_equal "300", Florist.exposed("price_of").earlier_answer(1).translate(300)
+    end
+
     test "a hub that declares an exposed method is recorded as a hub that exposes methods" do
       assert_includes HubKernel::Interface::ExposingHubs.list, Supplies
     end
