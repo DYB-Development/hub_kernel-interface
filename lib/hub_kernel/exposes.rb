@@ -12,7 +12,9 @@ module HubKernel
   class Refused < StandardError; end
 
   module Exposes
-    Exposed = Data.define(:name, :takes, :writes, :earlier_answers)
+    Exposed = Data.define(:name, :takes, :writes, :earlier_answers) do
+      def earlier_answer(major) = earlier_answers.find { |earlier| earlier.major == major }
+    end
     EarlierAnswer = Data.define(:major, :translation) do
       def translate(answer) = translation.call(answer)
     end

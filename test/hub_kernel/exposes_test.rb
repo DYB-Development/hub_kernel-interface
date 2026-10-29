@@ -37,6 +37,12 @@ module HubKernel
       exposes :price_of, takes: %i[item], writes: false, earlier_answers: { 1 => ->(answer) { answer.except(:currency) } }
     end
 
+    module Baker
+      extend HubKernel::Exposes
+
+      exposes :price_of, takes: %i[item], writes: false, earlier_answers: { 1 => ->(answer) { answer[:price] }, 2 => ->(answer) { { price: answer[:cents] } } }
+    end
+
     test "an exposed method is found by its name with the values it takes" do
       assert_equal %i[supplier_id bought_on lines], Supplies.exposed("record_purchase").takes
     end
@@ -59,6 +65,10 @@ module HubKernel
 
     test "an earlier answer is declared for a numbered major as a translation from the answer of the major after it" do
       assert_equal [ [ 1, { cents: 300 } ] ], Grocer.exposed("price_of").earlier_answers.map { |earlier| [ earlier.major, earlier.translate({ cents: 300, currency: "usd" }) ] }
+    end
+
+    test "an earlier answer an exposed method declares is read by its major number" do
+      assert_equal({ price: 300 }, Baker.exposed("price_of").earlier_answer(2).translate({ cents: 300 }))
     end
 
     test "a hub that declares an exposed method is recorded as a hub that exposes methods" do
