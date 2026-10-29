@@ -21,7 +21,7 @@ module HubKernel
 
     def exposes(name, takes:, writes:, earlier_answers: {}, answer_shape: nil)
       Interface::ExposingHubs.add(self)
-      exposed_methods[name.to_s] = Exposed.new(name: name, takes: takes, writes: writes, earlier_answers: earlier_answers.map { |major, translation| EarlierAnswer.new(major: major, translation: translation, answer_shape: nil) }, answer_shape: answer_shape)
+      exposed_methods[name.to_s] = Exposed.new(name: name, takes: takes, writes: writes, earlier_answers: earlier_answers.map { |major, declared| earlier_answer_from(major, declared) }, answer_shape: answer_shape)
     end
 
     def exposed(name) = exposed_methods[name.to_s]
@@ -58,6 +58,12 @@ module HubKernel
     def exposed_methods = @exposed_methods ||= {}
 
     def exposing_hub = name.demodulize
+
+    def earlier_answer_from(major, declared)
+      return EarlierAnswer.new(major: major, translation: declared, answer_shape: nil) if declared.respond_to?(:call)
+
+      EarlierAnswer.new(major: major, translation: declared[:translation], answer_shape: declared[:answer_shape])
+    end
 
     def refuse_without_caller(person, account)
       raise MissingArgumentError, "A call by name needs a person" if person.nil?
