@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-10-29
+
+### Added
+- `exposes` takes an optional `earlier_answers:` hash that maps an older major version's number to a translation from the answer of the major after it, read back with `exposure.earlier_answers` and `exposure.earlier_answer(major)`.
+- `exposes` takes an optional `answer_shape:` with the JSON Schema of the method's answer, read back with `exposure.answer_shape`.
+- An earlier answer may be given as `{ translation:, answer_shape: }` to carry the JSON Schema of the answer at that major, read back with `earlier_answer.answer_shape`.
+
 ## [0.9.0] - 2026-10-14
 
 ### Added
