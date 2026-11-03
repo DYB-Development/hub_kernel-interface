@@ -72,9 +72,6 @@ module HubKernel
     end
 
     test "a call made inside another call leaves the outer call's person in place" do
-      outer = ->(account, person:, &call) { call.call }
-      HubKernel::Context.scope = outer
-      HubKernel::Context.with_person(:sam) { Greeter.call_exposed("who_called", values: {}, person: :pat, account: :acme) }
       seen = HubKernel::Context.with_person(:sam) do
         Greeter.call_exposed("who_called", values: {}, person: :pat, account: :acme)
         HubKernel::Context.person
