@@ -61,6 +61,16 @@ module HubKernel
       assert_equal "soap costs 3", Shop.call_exposed("price_of", values: { item: "soap" }, person: :sam, account: :acme)
     end
 
+    test "reading the caller outside a call gives no person" do
+      assert_nil HubKernel::Context.person
+    end
+
+    test "reading the caller after a call that raised gives no person" do
+      assert_raises(HubKernel::Refused) { Stockroom.call_exposed("restock", values: { item: "soap" }, person: :sam, account: :acme) }
+
+      assert_nil HubKernel::Context.person
+    end
+
     test "calling an exposed method by name runs it and returns its answer" do
       assert_equal "soap costs 3", Shop.call_exposed("price_of", values: { item: "soap" }, person: :sam, account: :acme)
     end
