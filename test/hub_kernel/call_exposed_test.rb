@@ -46,6 +46,15 @@ module HubKernel
       assert_equal :sam, Greeter.call_exposed("who_called", values: {}, person: :sam, account: :acme)
     end
 
+    test "a scope that takes a person is given the person as well as the account" do
+      given = nil
+      HubKernel::Context.scope = ->(account, person:, &call) { given = [ account, person ]; call.call }
+
+      Shop.call_exposed("price_of", values: { item: "soap" }, person: :sam, account: :acme)
+
+      assert_equal [ :acme, :sam ], given
+    end
+
     test "calling an exposed method by name runs it and returns its answer" do
       assert_equal "soap costs 3", Shop.call_exposed("price_of", values: { item: "soap" }, person: :sam, account: :acme)
     end
