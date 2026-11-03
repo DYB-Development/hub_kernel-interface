@@ -71,6 +71,18 @@ module HubKernel
       assert_nil HubKernel::Context.person
     end
 
+    test "a call made inside another call leaves the outer call's person in place" do
+      outer = ->(account, person:, &call) { call.call }
+      HubKernel::Context.scope = outer
+      HubKernel::Context.with_person(:sam) { Greeter.call_exposed("who_called", values: {}, person: :pat, account: :acme) }
+      seen = HubKernel::Context.with_person(:sam) do
+        Greeter.call_exposed("who_called", values: {}, person: :pat, account: :acme)
+        HubKernel::Context.person
+      end
+
+      assert_equal :sam, seen
+    end
+
     test "calling an exposed method by name runs it and returns its answer" do
       assert_equal "soap costs 3", Shop.call_exposed("price_of", values: { item: "soap" }, person: :sam, account: :acme)
     end
