@@ -26,6 +26,14 @@ module HubKernel
       def self.restock(item:) = raise(HubKernel::Refused, "The #{item} shelf is full")
     end
 
+    module Greeter
+      extend HubKernel::Exposes
+
+      exposes :who_called, takes: [], writes: false
+
+      def self.who_called = HubKernel::Context.person
+    end
+
     setup do
       @check, @scope = HubKernel::Authz.check, HubKernel::Context.scope
       HubKernel::Authz.check = ->(*) { true }
@@ -33,6 +41,44 @@ module HubKernel
     end
 
     teardown { HubKernel::Authz.check, HubKernel::Context.scope = @check, @scope }
+
+    test "a hub method called by name can read the person who made the call" do
+      assert_equal :sam, Greeter.call_exposed("who_called", values: {}, person: :sam, account: :acme)
+    end
+
+    test "a scope that takes a person is given the person as well as the account" do
+      given = nil
+      HubKernel::Context.scope = ->(account, person:, &call) { given = [ account, person ]; call.call }
+
+      Shop.call_exposed("price_of", values: { item: "soap" }, person: :sam, account: :acme)
+
+      assert_equal [ :acme, :sam ], given
+    end
+
+    test "a scope object that takes only the account keeps working" do
+      HubKernel::Context.scope = Class.new { def call(_account) = yield }.new
+
+      assert_equal "soap costs 3", Shop.call_exposed("price_of", values: { item: "soap" }, person: :sam, account: :acme)
+    end
+
+    test "reading the caller outside a call gives no person" do
+      assert_nil HubKernel::Context.person
+    end
+
+    test "reading the caller after a call that raised gives no person" do
+      assert_raises(HubKernel::Refused) { Stockroom.call_exposed("restock", values: { item: "soap" }, person: :sam, account: :acme) }
+
+      assert_nil HubKernel::Context.person
+    end
+
+    test "a call made inside another call leaves the outer call's person in place" do
+      seen = HubKernel::Context.with_person(:sam) do
+        Greeter.call_exposed("who_called", values: {}, person: :pat, account: :acme)
+        HubKernel::Context.person
+      end
+
+      assert_equal :sam, seen
+    end
 
     test "calling an exposed method by name runs it and returns its answer" do
       assert_equal "soap costs 3", Shop.call_exposed("price_of", values: { item: "soap" }, person: :sam, account: :acme)

@@ -67,6 +67,7 @@ The contract between an app's hubs and the interfaces that call them from outsid
    - It must call the block exactly once, inside the scope.
    - It must return the block's value, since that value is what the call by name returns.
    - If the app has no account scoping, ask before using `->(account, &call) { call.call }`.
+   - A scope that also needs the calling person declares a `person:` keyword and is given both: `HubKernel::Context.scope = ->(account, person:, &call) { call.call }`. A scope taking only the account keeps working.
 
 6. Run `bin/rails runner 'p HubKernel::Interface.hubs, HubKernel::Authz.check, HubKernel::Context.scope'` and confirm it prints the hub list and two callables, none of them empty or `nil`.
 

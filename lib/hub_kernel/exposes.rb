@@ -46,7 +46,7 @@ module HubKernel
       exposure = exposed(name) || raise(UnexposedMethodError, "#{exposing_hub} does not expose #{name}")
       refuse_unless_allowed(exposure, person, account)
       refuse_missing_values(exposure, values)
-      within_account(account) { public_send(exposure.name, **values.slice(*exposure.takes)) }
+      Context.with_person(person) { within_account(account, person) { public_send(exposure.name, **values.slice(*exposure.takes)) } }
     end
 
     def exposure_problems
@@ -83,11 +83,14 @@ module HubKernel
       answer
     end
 
-    def within_account(account, &call)
+    def within_account(account, person, &call)
       raise UnwiredPortError, "hub_kernel's account scope is not filled" unless Context.scope
+      return Context.scope.call(account, person: person, &call) if scope_takes_person?
 
       Context.scope.call(account, &call)
     end
+
+    def scope_takes_person? = (Context.scope.respond_to?(:parameters) ? Context.scope : Context.scope.method(:call)).parameters.any? { |kind, name| %i[key keyreq].include?(kind) && name == :person }
 
     def refuse_missing_values(exposure, values)
       missing = keywords(exposure, :keyreq) - values.keys

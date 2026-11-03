@@ -20,6 +20,7 @@ The contract between a hub and the interfaces that call it from outside the app.
 - `exposures_for` — returns the declarations the permission check lets a person call on an account.
 - `allows?` — asks the permission check whether a person may call one exposed method on an account, returning `true` or `false`.
 - `call_exposed` — calls an exposed method by name with a person, an account and its values, behind the permission check and inside the account scope, and returns the method's value.
+- `HubKernel::Context.person` — returns the person making the call by name, readable from inside a hub method, and `nil` outside a call.
 - `exposure_problems` — returns one message per declaration the hub has no method for, or whose values do not match the method's keywords.
 - `HubKernel::Interface.find` — returns the hub served at a name, or `nil`.
 - `HubKernel::Interface.served` — returns a hash of every served name to its hub.

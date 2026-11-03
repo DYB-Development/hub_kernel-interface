@@ -27,6 +27,19 @@ HubKernel::Authz.check = ->(person, action, account) { true }
 HubKernel::Context.scope = ->(account, &call) { call.call }
 ```
 
+A scope that declares a `person:` keyword is given the calling person as well as the account:
+
+```ruby
+HubKernel::Context.scope = ->(account, person:, &call) { call.call }
+```
+
+A hub method called by name reads the person who made the call, and reading it outside a call
+gives `nil`:
+
+```ruby
+HubKernel::Context.person
+```
+
 An interface gem lists the methods a person may call on an account, and calls one by name:
 
 ```ruby

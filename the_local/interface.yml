@@ -15,6 +15,7 @@ develop:
   - allows?
   - call_exposed
   - exposure_problems
+  - HubKernel::Context.person
   - HubKernel::Interface.find
   - HubKernel::Interface.served
   - HubKernel::Interface.check!
