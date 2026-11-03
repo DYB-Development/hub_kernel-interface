@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-11-03
+
 ### Added
 - A hub method called by name reads the person who made the call with `HubKernel::Context.person`, which gives `nil` outside a call.
 - An account scope that declares a `person:` keyword is given the calling person as well as the account, and a scope that takes only the account keeps working.
