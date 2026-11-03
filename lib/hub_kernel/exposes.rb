@@ -46,7 +46,7 @@ module HubKernel
       exposure = exposed(name) || raise(UnexposedMethodError, "#{exposing_hub} does not expose #{name}")
       refuse_unless_allowed(exposure, person, account)
       refuse_missing_values(exposure, values)
-      within_account(account) { public_send(exposure.name, **values.slice(*exposure.takes)) }
+      Context.with_person(person) { within_account(account) { public_send(exposure.name, **values.slice(*exposure.takes)) } }
     end
 
     def exposure_problems

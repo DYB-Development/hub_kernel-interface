@@ -26,6 +26,14 @@ module HubKernel
       def self.restock(item:) = raise(HubKernel::Refused, "The #{item} shelf is full")
     end
 
+    module Greeter
+      extend HubKernel::Exposes
+
+      exposes :who_called, takes: [], writes: false
+
+      def self.who_called = HubKernel::Context.person
+    end
+
     setup do
       @check, @scope = HubKernel::Authz.check, HubKernel::Context.scope
       HubKernel::Authz.check = ->(*) { true }
@@ -33,6 +41,10 @@ module HubKernel
     end
 
     teardown { HubKernel::Authz.check, HubKernel::Context.scope = @check, @scope }
+
+    test "a hub method called by name can read the person who made the call" do
+      assert_equal :sam, Greeter.call_exposed("who_called", values: {}, person: :sam, account: :acme)
+    end
 
     test "calling an exposed method by name runs it and returns its answer" do
       assert_equal "soap costs 3", Shop.call_exposed("price_of", values: { item: "soap" }, person: :sam, account: :acme)
