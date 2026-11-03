@@ -90,7 +90,7 @@ module HubKernel
       Context.scope.call(account, &call)
     end
 
-    def scope_takes_person? = Context.scope.parameters.any? { |kind, name| %i[key keyreq].include?(kind) && name == :person }
+    def scope_takes_person? = (Context.scope.respond_to?(:parameters) ? Context.scope : Context.scope.method(:call)).parameters.any? { |kind, name| %i[key keyreq].include?(kind) && name == :person }
 
     def refuse_missing_values(exposure, values)
       missing = keywords(exposure, :keyreq) - values.keys

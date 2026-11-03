@@ -55,6 +55,12 @@ module HubKernel
       assert_equal [ :acme, :sam ], given
     end
 
+    test "a scope object that takes only the account keeps working" do
+      HubKernel::Context.scope = Class.new { def call(_account) = yield }.new
+
+      assert_equal "soap costs 3", Shop.call_exposed("price_of", values: { item: "soap" }, person: :sam, account: :acme)
+    end
+
     test "calling an exposed method by name runs it and returns its answer" do
       assert_equal "soap costs 3", Shop.call_exposed("price_of", values: { item: "soap" }, person: :sam, account: :acme)
     end
