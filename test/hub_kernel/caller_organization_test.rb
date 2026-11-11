@@ -35,5 +35,9 @@ module HubKernel
     test "a client method is never listed with the organization as a value the caller can send" do
       assert_equal [ [] ], Holdings.exposures_for(person: :cleo, account: :acme).map(&:takes)
     end
+
+    test "a client call that sends its own organization value is refused as a value the method does not take" do
+      assert_raises(HubKernel::Refused, match: "reports does not take organization_id") { Portal.call_exposed("reports", values: { period: "may", organization_id: "other-org" }, person: :cleo, account: :acme) }
+    end
   end
 end

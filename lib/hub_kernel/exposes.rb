@@ -47,6 +47,7 @@ module HubKernel
 
       exposure = exposed(name) || raise(UnexposedMethodError, "#{exposing_hub} does not expose #{name}")
       refuse_unless_allowed(exposure, person, account)
+      refuse_sent_organization(exposure, values)
       refuse_missing_values(exposure, values)
       Context.with_person(person) { within_account(account, person) { public_send(exposure.name, **values.slice(*exposure.takes), **organization_value(exposure, person, account)) } }
     end
@@ -106,6 +107,10 @@ module HubKernel
     end
 
     def scope_takes_person? = (Context.scope.respond_to?(:parameters) ? Context.scope : Context.scope.method(:call)).parameters.any? { |kind, name| %i[key keyreq].include?(kind) && name == :person }
+
+    def refuse_sent_organization(exposure, values)
+      raise Refused, "#{exposure.name} does not take #{exposure.organization}" if exposure.organization && values.key?(exposure.organization)
+    end
 
     def organization_value(exposure, person, account)
       return {} unless exposure.organization
