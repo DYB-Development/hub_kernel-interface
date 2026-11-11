@@ -35,5 +35,11 @@ module HubKernel
 
       assert_equal [ :my_orders ], Shop.exposures_for(person: :cleo, account: :acme).map(&:name)
     end
+
+    test "a method marked for clients is never listed to a staff caller" do
+      HubKernel::Authz.caller_kind = ->(_person, _account) { :staff }
+
+      assert_equal [ :restock ], Shop.exposures_for(person: :sam, account: :acme).map(&:name)
+    end
   end
 end
