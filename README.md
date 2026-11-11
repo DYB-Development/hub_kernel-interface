@@ -69,6 +69,29 @@ refuses. A caller kind that answers anything but `:client` or `:staff` raises
 `HubKernel::UnknownCallerKindError`. A host that sets no caller kind has every method listed
 and served to every caller, whether marked for clients or not.
 
+A host names the organization a client caller belongs to, from the person and the account
+the call is made as:
+
+```ruby
+HubKernel::Authz.caller_organization = ->(person, account) { account.client_organization&.id }
+```
+
+A method that reads one organization's data names the value the caller's organization is
+filled into on its `exposes` line, and requires that value without listing it in `takes:`:
+
+```ruby
+exposes :my_reports, takes: %i[period], writes: false, for_clients: true, organization: :organization_id
+
+def self.my_reports(organization_id:, period:) = Report.where(organization_id: organization_id, period: period)
+```
+
+The method is given the organization the host names for the caller. The organization value
+is never listed among the values the method takes, even when `takes:` names it. A call that
+sends the organization value itself is refused with `HubKernel::Refused`, as a value the method
+does not take. A caller the host names no organization for, by answering `nil`, is refused with
+`HubKernel::NotAllowed` before the method runs. The exposure check passes a method that requires
+the organization value without listing it in `takes:`.
+
 A call is refused with `HubKernel::UnexposedMethodError` for a name the hub does not expose,
 `HubKernel::NotAllowed` when the permission check refuses, and `HubKernel::MissingArgumentError`
 for a missing person, account or required value. A hub refuses with `HubKernel::Refused` and a

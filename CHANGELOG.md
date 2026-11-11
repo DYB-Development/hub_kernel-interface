@@ -8,6 +8,10 @@
 - A client caller is listed and may call only the methods marked for clients, a staff caller only the methods not marked, and a host that sets no caller kind has every method listed and served as in 0.11.0.
 - A client caller who calls a method not marked for clients is refused with `HubKernel::NotAllowed`, and `allows?` answers `false` for a method the caller's kind may not reach.
 - A caller kind that answers anything but `:client` or `:staff` raises `HubKernel::UnknownCallerKindError`.
+- `HubKernel::Authz.caller_organization`, where a host names the organization a caller belongs to from the person and the account a call is made as.
+- `exposes` takes an optional `organization:` naming the value a method is given the caller's organization in, read back with `exposure.organization` and never listed in `exposure.takes`.
+- A call that sends a method's organization value is refused with `HubKernel::Refused`, and a caller the host names no organization for is refused with `HubKernel::NotAllowed` before the method runs.
+- The exposure check passes a method that requires its organization value without listing it in `takes:`.
 
 ## [0.11.0] - 2026-11-03
 
