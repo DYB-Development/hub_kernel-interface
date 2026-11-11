@@ -9,7 +9,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     env:
-      RUBY_VERSION: 3.3.5
+      RUBY_VERSION: "3.3"
       RUBOCOP_CACHE_ROOT: tmp/rubocop
     steps:
       - name: Checkout code
@@ -43,7 +43,7 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: 3.3.5
+          ruby-version: "3.3"
           bundler-cache: true
 
       - name: Run tests
