@@ -10,6 +10,14 @@ module HubKernel
       def self.reports(organization_id:, period:) = [ organization_id, period ]
     end
 
+    module Holdings
+      extend HubKernel::Exposes
+
+      exposes :products, takes: %i[organization_id], writes: false, for_clients: true, organization: :organization_id
+
+      def self.products(organization_id:) = organization_id
+    end
+
     setup do
       @check, @caller_kind, @caller_organization, @scope = HubKernel::Authz.check, HubKernel::Authz.caller_kind, HubKernel::Authz.caller_organization, HubKernel::Context.scope
       HubKernel::Authz.check = ->(*) { true }
@@ -22,6 +30,10 @@ module HubKernel
 
     test "a client method receives the organization the host names for the caller" do
       assert_equal [ "acme-org", "may" ], Portal.call_exposed("reports", values: { period: "may" }, person: :cleo, account: :acme)
+    end
+
+    test "a client method is never listed with the organization as a value the caller can send" do
+      assert_equal [ [] ], Holdings.exposures_for(person: :cleo, account: :acme).map(&:takes)
     end
   end
 end

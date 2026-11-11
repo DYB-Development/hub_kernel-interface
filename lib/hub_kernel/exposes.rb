@@ -22,7 +22,7 @@ module HubKernel
 
     def exposes(name, takes:, writes:, earlier_answers: {}, answer_shape: nil, for_clients: false, organization: nil)
       Interface::ExposingHubs.add(self)
-      exposed_methods[name.to_s] = Exposed.new(name: name, takes: takes, writes: writes, earlier_answers: earlier_answers.map { |major, declared| earlier_answer_from(major, declared) }, answer_shape: answer_shape, for_clients: for_clients, organization: organization)
+      exposed_methods[name.to_s] = Exposed.new(name: name, takes: takes - [ organization ], writes: writes, earlier_answers: earlier_answers.map { |major, declared| earlier_answer_from(major, declared) }, answer_shape: answer_shape, for_clients: for_clients, organization: organization)
     end
 
     def exposed(name) = exposed_methods[name.to_s]
