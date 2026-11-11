@@ -53,5 +53,9 @@ module HubKernel
 
       assert_raises(HubKernel::NotAllowed, match: "Ledger entries") { Ledger.call_exposed("entries", values: {}, person: :cleo, account: :acme) }
     end
+
+    test "the exposure check passes a client method that requires the organization value without listing it among the values it takes" do
+      assert_empty Portal.exposure_problems
+    end
   end
 end
