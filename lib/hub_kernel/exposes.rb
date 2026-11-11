@@ -7,21 +7,22 @@ module HubKernel
   class MissingArgumentError < ArgumentError; end
   class UnwiredPortError < StandardError; end
   class NonBooleanAnswerError < StandardError; end
+  class UnknownCallerKindError < StandardError; end
   class UnexposedMethodError < StandardError; end
   class NotAllowed < StandardError; end
   class Refused < StandardError; end
 
   module Exposes
-    Exposed = Data.define(:name, :takes, :writes, :earlier_answers, :answer_shape) do
+    Exposed = Data.define(:name, :takes, :writes, :earlier_answers, :answer_shape, :for_clients) do
       def earlier_answer(major) = earlier_answers.find { |earlier| earlier.major == major }
     end
     EarlierAnswer = Data.define(:major, :translation, :answer_shape) do
       def translate(answer) = translation.call(answer)
     end
 
-    def exposes(name, takes:, writes:, earlier_answers: {}, answer_shape: nil)
+    def exposes(name, takes:, writes:, earlier_answers: {}, answer_shape: nil, for_clients: false)
       Interface::ExposingHubs.add(self)
-      exposed_methods[name.to_s] = Exposed.new(name: name, takes: takes, writes: writes, earlier_answers: earlier_answers.map { |major, declared| earlier_answer_from(major, declared) }, answer_shape: answer_shape)
+      exposed_methods[name.to_s] = Exposed.new(name: name, takes: takes, writes: writes, earlier_answers: earlier_answers.map { |major, declared| earlier_answer_from(major, declared) }, answer_shape: answer_shape, for_clients: for_clients)
     end
 
     def exposed(name) = exposed_methods[name.to_s]
@@ -31,13 +32,14 @@ module HubKernel
     def exposures_for(person:, account:)
       refuse_without_caller(person, account)
 
-      exposures.select { |exposure| allowed?(exposure, person, account) }
+      kind = caller_kind(person, account)
+      exposures.select { |exposure| reachable?(exposure, kind) && allowed?(exposure, person, account) }
     end
 
     def allows?(name, person:, account:)
       refuse_without_caller(person, account)
 
-      allowed?(exposed(name), person, account)
+      callable?(exposed(name), person, account)
     end
 
     def call_exposed(name, values:, person:, account:)
@@ -71,8 +73,21 @@ module HubKernel
     end
 
     def refuse_unless_allowed(exposure, person, account)
-      raise NotAllowed, "#{exposing_hub} #{exposure.name}" unless allowed?(exposure, person, account)
+      raise NotAllowed, "#{exposing_hub} #{exposure.name}" unless callable?(exposure, person, account)
     end
+
+    def callable?(exposure, person, account) = reachable?(exposure, caller_kind(person, account)) && allowed?(exposure, person, account)
+
+    def caller_kind(person, account)
+      return unless Authz.caller_kind
+
+      kind = Authz.caller_kind.call(person, account)
+      raise UnknownCallerKindError, "The caller kind must answer :client or :staff, got #{kind.inspect}" unless %i[client staff].include?(kind)
+
+      kind
+    end
+
+    def reachable?(exposure, kind) = kind.nil? || (kind == :client) == exposure.for_clients
 
     def allowed?(exposure, person, account)
       raise UnwiredPortError, "hub_kernel's permission check is not filled" unless Authz.check

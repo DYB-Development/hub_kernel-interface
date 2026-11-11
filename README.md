@@ -47,6 +47,28 @@ Supplies.exposures_for(person: person, account: account)
 Supplies.call_exposed("price_of", values: { item: "soap" }, person: person, account: account)
 ```
 
+A host that serves clients as well as staff says which kind each caller is, from the person
+and the account the call is made as, by answering `:client` or `:staff`:
+
+```ruby
+HubKernel::Authz.caller_kind = ->(person, account) { person.client_of?(account) ? :client : :staff }
+```
+
+A method meant for clients is marked on its `exposes` line, and every other method is for
+staff:
+
+```ruby
+exposes :my_orders, takes: [], writes: false, for_clients: true
+```
+
+A client caller is listed and may call only the methods marked for clients, and a staff
+caller only the methods not marked. The permission check is still asked about every method
+a caller's kind may reach, and about no other. A client caller who calls a method not marked
+for clients is refused with `HubKernel::NotAllowed`, the same as a call the permission check
+refuses. A caller kind that answers anything but `:client` or `:staff` raises
+`HubKernel::UnknownCallerKindError`. A host that sets no caller kind has every method listed
+and served to every caller, whether marked for clients or not.
+
 A call is refused with `HubKernel::UnexposedMethodError` for a name the hub does not expose,
 `HubKernel::NotAllowed` when the permission check refuses, and `HubKernel::MissingArgumentError`
 for a missing person, account or required value. A hub refuses with `HubKernel::Refused` and a

@@ -19,7 +19,7 @@ Reach for it when a Rails app wants its hubs callable from an API or an agent se
 
 This local declares no commands of its own. The surface belongs to the other two locals:
 
-- **hub_kernel-interface-install** owns adding the gem to a host and filling the three host settings: the served hub list, the permission check, and the account scope.
+- **hub_kernel-interface-install** owns adding the gem to a host and filling the host settings: the served hub list, the permission check, the account scope, and, for an app with clients as well as staff, the caller kind.
 - **hub_kernel-interface-develop** owns everything a hub or an interface gem writes against: declaring a hub's callable methods, listing and making calls by name, finding served hubs, the boot check, the shared refusal reasons, and the errors a call can raise.
 
 ## How to use it

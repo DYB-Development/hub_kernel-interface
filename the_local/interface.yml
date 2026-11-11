@@ -4,6 +4,7 @@ install:
   - gem "hub_kernel-interface"
   - HubKernel::Interface.hubs=
   - HubKernel::Authz.check=
+  - HubKernel::Authz.caller_kind=
   - HubKernel::Context.scope=
 
 develop:
@@ -29,6 +30,7 @@ develop:
   - HubKernel::MissingArgumentError
   - HubKernel::UnwiredPortError
   - HubKernel::NonBooleanAnswerError
+  - HubKernel::UnknownCallerKindError
 
 sources:
   - lib/hub_kernel/interface.rb
