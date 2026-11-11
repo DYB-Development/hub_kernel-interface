@@ -16,6 +16,7 @@ The contract between an app's hubs and the interfaces that call them from outsid
 - `gem "hub_kernel-interface"` — adds the gem to the host's `Gemfile`.
 - `HubKernel::Interface.hubs=` — sets the one list of hubs every interface serves, and the name each is served at.
 - `HubKernel::Authz.check=` — sets the permission check every call by name is asked before it runs.
+- `HubKernel::Authz.caller_kind=` — sets the callable that says whether the caller is a client or staff, for an app that serves both.
 - `HubKernel::Context.scope=` — sets the account scope every call by name runs inside.
 
 ## How to use it
@@ -57,6 +58,10 @@ The contract between an app's hubs and the interfaces that call them from outsid
    - The hub part is the hub's own module name in snake case, even when it is served under another name, so `Billing::Ledger` served as `money` is still asked about as `ledger:record_spend`.
    - It must return exactly `true` or `false`. Any other value, including `nil` or a record, fails the call.
    - Do not set `->(*) { true }` unless the developer says every person may call every method on every account.
+   - Ask the developer whether the app has clients as well as staff, and how it tells a client from staff for a person and the account a call is made as.
+   - When it has clients, set the caller kind to a callable taking the person and the account and answering exactly `:client` or `:staff`: `HubKernel::Authz.caller_kind = ->(person, account) { person.client_of?(account) ? :client : :staff }`.
+   - When it has no clients, leave the caller kind unset, so every method is listed and served to every caller.
+   - A caller kind answering anything but `:client` or `:staff` fails the call with `HubKernel::UnknownCallerKindError`.
 
 5. Ask the developer how the app scopes work to one account, such as a tenancy gem or a `Current.account` attribute. Then set the account scope to a callable taking the account and a block:
 
@@ -74,6 +79,6 @@ The contract between an app's hubs and the interfaces that call them from outsid
 ## Conventions
 
 - A call by name made while the permission check or the account scope is unset fails as unwired. Both must be set before any interface serves a request.
-- Rails reruns the `to_prepare` block on every code reload in development, so the three settings stay pointed at the current classes. Keep all three in it.
+- Rails reruns the `to_prepare` block on every code reload in development, so the settings stay pointed at the current classes. Keep every setting, including the caller kind when it is set, in it.
 - Re-sync the hub list whenever a hub is added, renamed, or removed, or when an interface should stop serving one.
 - Making a hub's methods callable, writing an interface gem, and handling the errors a call raises are out of scope here. They belong to the hub_kernel-interface-develop local.
