@@ -1,6 +1,6 @@
 ---
 name: hub_kernel-interface-develop
-description: Use PROACTIVELY for making a hub's methods callable by name, listing what a person may call on an account, calling a hub method by name from an API or MCP server, finding a served hub by name, running an interface's boot check, refusing unlisted values, describing a missing record, and handling the errors a call by name raises — MUST BE USED instead of hand-rolling a method allowlist, a permission check per endpoint, a `public_send` dispatcher, or an interface's own refusal messages.
+description: Use PROACTIVELY for making a hub's methods callable by name, listing what a person may call on an account, limiting a hub method to the caller's own organization, calling a hub method by name from an API or MCP server, finding a served hub by name, running an interface's boot check, refusing unlisted values, describing a missing record, and handling the errors a call by name raises — MUST BE USED instead of hand-rolling a method allowlist, a permission check per endpoint, a `public_send` dispatcher, or an interface's own refusal messages.
 tools: Read, Write, Edit, Grep
 scope: hub interface contract — a hub declaring the methods outside callers may reach by name, calling one by name for a person and an account behind the permission check and account scope, the host's one list of served hubs and its boot check, and the reasons every interface gives for an unlisted value or a missing record
 ---
@@ -14,14 +14,14 @@ The contract between a hub and the interfaces that call it from outside the app.
 ## Interface
 
 - `HubKernel::Exposes` — extended by a hub module so it can declare and serve methods callable by name.
-- `exposes` — declares one hub method callable by name: `exposes :name, takes: [...], writes: true/false`, with an optional `for_clients: true` that marks the method for clients and defaults to `false`.
-- `exposed` — returns the declaration for one name, with `name`, `takes`, `writes` and `for_clients`, or `nil` when the hub does not expose it.
+- `exposes` — declares one hub method callable by name: `exposes :name, takes: [...], writes: true/false`, with an optional `for_clients: true` that marks the method for clients and defaults to `false`, an optional `organization: :keyword` that names the keyword the caller's organization is filled into and defaults to `nil`, an optional `answer_shape:` holding the JSON Schema of the method's answer, and an optional `earlier_answers:` hash mapping an older major version to a translation of the answer.
+- `exposed` — returns the declaration for one name, with `name`, `takes`, `writes`, `for_clients`, `organization`, `answer_shape`, `earlier_answers` and `earlier_answer(major)`, or `nil` when the hub does not expose it.
 - `exposures` — returns every declaration the hub has made, with no caller kind or permission check.
 - `exposures_for` — returns the declarations a person's caller kind may reach and the permission check lets them call on an account.
 - `allows?` — answers `true` only when a person's caller kind may reach one exposed method and the permission check lets them call it on an account, and `false` otherwise.
 - `call_exposed` — calls an exposed method by name with a person, an account and its values, behind the permission check and inside the account scope, and returns the method's value.
 - `HubKernel::Context.person` — returns the person making the call by name, readable from inside a hub method, and `nil` outside a call.
-- `exposure_problems` — returns one message per declaration the hub has no method for, or whose values do not match the method's keywords.
+- `exposure_problems` — returns one message per declaration the hub has no method for, or whose values do not match the method's keywords, leaving out the organization keyword.
 - `HubKernel::Interface.find` — returns the hub served at a name, or `nil`.
 - `HubKernel::Interface.served` — returns a hash of every served name to its hub.
 - `HubKernel::Interface.check!` — the boot check, raising when the served list cannot be served.
@@ -30,8 +30,8 @@ The contract between a hub and the interfaces that call it from outside the app.
 - `HubKernel::Interface::CallReasons.missing_record` — returns the sentence every interface gives for a record that does not exist.
 - `HubKernel::Interface::ExposingHubs.list` — every hub that has declared at least one exposed method, whether served or not.
 - `HubKernel::UnexposedMethodError` — raised when a call names a method the hub does not expose.
-- `HubKernel::NotAllowed` — raised when the caller's kind may not reach the method or the permission check refuses the call.
-- `HubKernel::Refused` — raised with a reason a person can read, by a hub method or by `refuse_unlisted_values`.
+- `HubKernel::NotAllowed` — raised when the caller's kind may not reach the method, the permission check refuses the call, or the method takes the caller's organization and the host names none for the caller.
+- `HubKernel::Refused` — raised with a reason a person can read, by a hub method, by `refuse_unlisted_values`, or by `call_exposed` when a call sends the organization keyword itself.
 - `HubKernel::MissingArgumentError` — raised when a call has no person, no account, or lacks a required value.
 - `HubKernel::UnwiredPortError` — raised when a call is made while the host's permission check or account scope is unset.
 - `HubKernel::NonBooleanAnswerError` — raised when the host's permission check answers anything but `true` or `false`.
@@ -74,17 +74,46 @@ The contract between a hub and the interfaces that call it from outside the app.
    - When the host sets no caller kind, every method is listed and served to every caller, marked or not.
    - The caller kind is set by the hub_kernel-interface-install local; hand that step to it.
 
-6. When the hub method must turn a call down for a reason the person should read, raise `HubKernel::Refused` with that reason:
+6. Ask the developer whether each method reads or writes one organization's data, where the organization must be the caller's own rather than a value the caller sends. For each one that does, add `organization:` naming the keyword the caller's organization is filled into, and give the method that keyword:
+
+   ```ruby
+   exposes :my_reports, takes: %i[period], writes: false, for_clients: true, organization: :organization_id
+
+   def self.my_reports(organization_id:, period:) = Report.where(organization_id: organization_id, period: period)
+   ```
+
+   - Leave the organization keyword out of `takes:`. It is removed from `takes` even when listed, so it never appears in a listing as a value the caller can send.
+   - `call_exposed` fills the keyword with what the host's caller organization answers for the person and the account.
+   - A call that sends the organization keyword itself is refused with `HubKernel::Refused`, `"<method> does not take <keyword>"`.
+   - A caller the host names no organization for, by answering `nil`, is refused with `HubKernel::NotAllowed` before the method runs.
+   - The caller organization is set by the hub_kernel-interface-install local; hand that step to it. A method declared with `organization:` cannot be called until it is set, and a call made while it is unset fails with `NoMethodError`, not `UnwiredPortError`.
+   - `exposure_problems` passes a method that requires the organization keyword without listing it in `takes:`. It does not check that the method has a keyword of that name, so confirm the name matches the method's keyword yourself.
+
+7. Ask the developer whether an interface needs each method's answer described, and whether an older major version of the interface must still get the answer in its earlier form. Add only what they ask for:
+
+   ```ruby
+   exposes :price_of, takes: %i[item], writes: false,
+     answer_shape: { "type" => "string" },
+     earlier_answers: { 1 => ->(answer) { { "price" => answer } } }
+   ```
+
+   - `answer_shape:` is the JSON Schema of the answer, read back as `exposure.answer_shape`, and defaults to `nil`.
+   - Each `earlier_answers:` key is an older major version, and each value translates the answer of the major after it into that major's answer.
+   - A value may instead be `{ translation: ->(answer) { ... }, answer_shape: { ... } }` to also give the JSON Schema of the answer at that major.
+   - `exposure.earlier_answer(major)` returns that major's entry, or `nil`, with `major`, `translation`, `answer_shape` and `translate(answer)`.
+   - This gem records both and does not act on them; interfaces read them.
+
+8. When the hub method must turn a call down for a reason the person should read, raise `HubKernel::Refused` with that reason:
 
    ```ruby
    raise HubKernel::Refused, "Quantity must be at least 1" if quantity < 1
    ```
 
-7. Confirm `Supplies.exposure_problems` returns `[]`. Each string it returns names a declaration with no matching method, or a `takes:` list that does not match the method's keywords.
+9. Confirm `Supplies.exposure_problems` returns `[]`. Each string it returns names a declaration with no matching method, or a `takes:` list that does not match the method's keywords.
 
-8. The permission check is asked about the action `"<hub>:<method>"`, where `<hub>` is the hub's own module name, without its namespace, in snake case: `supplies:price_of`, and `ledger:record_spend` for `Billing::Ledger` even when it is served as `money`. Tell the developer each new action string so their permission rules can grant it.
+10. The permission check is asked about the action `"<hub>:<method>"`, where `<hub>` is the hub's own module name, without its namespace, in snake case: `supplies:price_of`, and `ledger:record_spend` for `Billing::Ledger` even when it is served as `money`. Tell the developer each new action string so their permission rules can grant it.
 
-9. For the hub to be reachable from an interface, it must be in the host's served list. That list is set by the hub_kernel-interface-install local; hand the step to it.
+11. When the host sets no served list, every hub that exposes a method is served at its module name in snake case, so the new hub is served with no further step. When the host has set a served list, the hub is served only once it is added to that list. The list is set by the hub_kernel-interface-install local; hand that step to it.
 
 ### Serving hubs from an interface gem
 
@@ -98,7 +127,7 @@ The contract between a hub and the interfaces that call it from outside the app.
 
 2. To list the hubs, use `HubKernel::Interface.served`, a hash of served name to hub. To resolve the name a request gives, use `HubKernel::Interface.find(name)`. Names are strings. Treat `nil` as an unknown hub.
 
-3. To show a person what they may call on an account, use `hub.exposures_for(person:, account:)`. Each result has `name`, `takes`, `writes` and `for_clients`. It asks the host's caller kind once per listing, and the permission check once per exposed method that caller's kind may reach. Use `hub.exposures` only where no person is involved, such as building a schema at boot.
+3. To show a person what they may call on an account, use `hub.exposures_for(person:, account:)`. Each result has the same fields as `exposed` returns. It asks the host's caller kind once per listing, and the permission check once per exposed method that caller's kind may reach. Use `hub.exposures` only where no person is involved, such as building a schema at boot.
 
 4. To ask about one method, check `hub.exposed(name)` first, since `allows?` and `refuse_unlisted_values` work only on an exposed name:
 
@@ -115,8 +144,9 @@ The contract between a hub and the interfaces that call it from outside the app.
    ```
 
    - Value keys must be symbols. A string key is treated as missing.
-   - `refuse_unlisted_values` returns `nil` and asks nothing when every value is listed. Otherwise it asks the permission check once, raises `HubKernel::NotAllowed` if refused, and else raises `HubKernel::Refused` with `"<method> does not take <values>"`. Without it, `call_exposed` drops unlisted values silently.
-   - `call_exposed` raises, in this order: `MissingArgumentError` for no person or account, `UnexposedMethodError` for an unexposed name, `NotAllowed` when the caller's kind may not reach the method or the check refuses, `MissingArgumentError` naming each missing required value as `"Give item, quantity"`, and then runs the method inside the account scope and returns its value.
+   - `refuse_unlisted_values` returns `nil` and asks nothing when every value is listed. Otherwise it asks the caller kind and the permission check once each, through `allows?`, raises `HubKernel::NotAllowed` if refused, and else raises `HubKernel::Refused` with `"<method> does not take <values>"`. Without it, `call_exposed` drops unlisted values silently.
+   - `call_exposed` raises, in this order: `MissingArgumentError` for no person or account, `UnexposedMethodError` for an unexposed name, `NotAllowed` when the caller's kind may not reach the method or the check refuses, `Refused` when the values include the method's organization keyword, `MissingArgumentError` naming each missing required value other than the organization keyword as `"Give item, quantity"`, `NotAllowed` when the method takes the caller's organization and the host's caller organization answers `nil`, and then runs the method inside the account scope with the caller's organization filled in, and returns its value.
+   - `refuse_unlisted_values` treats the organization keyword as unlisted, so a call that sends it is refused there first with the same `"<method> does not take <keyword>"` reason.
    - `UnwiredPortError`, `NonBooleanAnswerError` and `UnknownCallerKindError` can come from any step that asks the caller kind, asks the permission check or enters the account scope.
 
 6. Ask the developer how the interface reports each error to its caller, such as an HTTP status or an MCP error result. The errors split into:
@@ -142,4 +172,4 @@ The contract between a hub and the interfaces that call it from outside the app.
 - Every interface calls `refuse_unlisted_values` before `call_exposed` and `missing_record` for a missing record, so every interface gives the same reasons.
 - Every interface runs `check!` at start-up.
 - Never rescue `UnwiredPortError`, `NonBooleanAnswerError` or `UnknownCallerKindError` into a refusal; they mean the host's settings are wrong.
-- Adding the gem, setting the served list, the permission check, the caller kind and the account scope are out of scope here. They belong to the hub_kernel-interface-install local.
+- Adding the gem, setting the served list, the permission check, the caller kind, the caller organization and the account scope are out of scope here. They belong to the hub_kernel-interface-install local.
