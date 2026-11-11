@@ -73,5 +73,11 @@ module HubKernel
 
       assert_equal [ "shop:my_orders" ], asked
     end
+
+    test "a caller kind that answers neither client nor staff raises the unknown caller kind error" do
+      HubKernel::Authz.caller_kind = ->(_person, _account) { nil }
+
+      assert_raises(HubKernel::UnknownCallerKindError, match: "The caller kind must answer :client or :staff, got nil") { Shop.exposures_for(person: :cleo, account: :acme) }
+    end
   end
 end

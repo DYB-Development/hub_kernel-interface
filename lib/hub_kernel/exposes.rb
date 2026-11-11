@@ -7,6 +7,7 @@ module HubKernel
   class MissingArgumentError < ArgumentError; end
   class UnwiredPortError < StandardError; end
   class NonBooleanAnswerError < StandardError; end
+  class UnknownCallerKindError < StandardError; end
   class UnexposedMethodError < StandardError; end
   class NotAllowed < StandardError; end
   class Refused < StandardError; end
@@ -77,7 +78,14 @@ module HubKernel
 
     def callable?(exposure, person, account) = reachable?(exposure, caller_kind(person, account)) && allowed?(exposure, person, account)
 
-    def caller_kind(person, account) = Authz.caller_kind&.call(person, account)
+    def caller_kind(person, account)
+      return unless Authz.caller_kind
+
+      kind = Authz.caller_kind.call(person, account)
+      raise UnknownCallerKindError, "The caller kind must answer :client or :staff, got #{kind.inspect}" unless %i[client staff].include?(kind)
+
+      kind
+    end
 
     def reachable?(exposure, kind) = kind.nil? || (kind == :client) == exposure.for_clients
 
