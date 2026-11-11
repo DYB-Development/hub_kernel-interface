@@ -41,5 +41,14 @@ module HubKernel
 
       assert_equal [ :restock ], Shop.exposures_for(person: :sam, account: :acme).map(&:name)
     end
+
+    test "a listing asks the host once for the caller's kind, giving it the person and the account" do
+      asked = []
+      HubKernel::Authz.caller_kind = ->(person, account) { asked << [ person, account ]; :client }
+
+      Shop.exposures_for(person: :cleo, account: :acme)
+
+      assert_equal [ [ :cleo, :acme ] ], asked
+    end
   end
 end
