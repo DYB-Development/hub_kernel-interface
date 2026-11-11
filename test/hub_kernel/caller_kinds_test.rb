@@ -57,5 +57,11 @@ module HubKernel
 
       assert_raises(HubKernel::NotAllowed, match: "Shop restock") { Shop.call_exposed("restock", values: { item: "soap" }, person: :cleo, account: :acme) }
     end
+
+    test "asking whether a staff caller may call a method marked for clients answers false" do
+      HubKernel::Authz.caller_kind = ->(_person, _account) { :staff }
+
+      assert_equal false, Shop.allows?("my_orders", person: :sam, account: :acme)
+    end
   end
 end

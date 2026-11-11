@@ -38,7 +38,7 @@ module HubKernel
     def allows?(name, person:, account:)
       refuse_without_caller(person, account)
 
-      allowed?(exposed(name), person, account)
+      callable?(exposed(name), person, account)
     end
 
     def call_exposed(name, values:, person:, account:)
@@ -72,8 +72,10 @@ module HubKernel
     end
 
     def refuse_unless_allowed(exposure, person, account)
-      raise NotAllowed, "#{exposing_hub} #{exposure.name}" unless reachable?(exposure, caller_kind(person, account)) && allowed?(exposure, person, account)
+      raise NotAllowed, "#{exposing_hub} #{exposure.name}" unless callable?(exposure, person, account)
     end
+
+    def callable?(exposure, person, account) = reachable?(exposure, caller_kind(person, account)) && allowed?(exposure, person, account)
 
     def caller_kind(person, account) = Authz.caller_kind&.call(person, account)
 
