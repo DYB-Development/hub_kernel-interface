@@ -49,7 +49,8 @@ module HubKernel
       refuse_unless_allowed(exposure, person, account)
       refuse_sent_organization(exposure, values)
       refuse_missing_values(exposure, values)
-      Context.with_person(person) { within_account(account, person) { public_send(exposure.name, **values.slice(*exposure.takes), **organization_value(exposure, person, account)) } }
+      organization = organization_value(exposure, person, account)
+      Context.with_person(person) { within_account(account, person) { public_send(exposure.name, **values.slice(*exposure.takes), **organization) } }
     end
 
     def exposure_problems
@@ -115,7 +116,10 @@ module HubKernel
     def organization_value(exposure, person, account)
       return {} unless exposure.organization
 
-      { exposure.organization => Authz.caller_organization.call(person, account) }
+      organization = Authz.caller_organization.call(person, account)
+      raise NotAllowed, "#{exposing_hub} #{exposure.name}" if organization.nil?
+
+      { exposure.organization => organization }
     end
 
     def refuse_missing_values(exposure, values)
