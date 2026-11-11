@@ -13,8 +13,21 @@ module HubKernel
       def self.restock(item:) = item
     end
 
+    setup do
+      @check, @caller_kind = HubKernel::Authz.check, HubKernel::Authz.caller_kind
+      HubKernel::Authz.check = ->(*) { true }
+    end
+
+    teardown { HubKernel::Authz.check, HubKernel::Authz.caller_kind = @check, @caller_kind }
+
     test "a method is marked for clients only when its exposes line says so" do
       assert_equal [ [ :my_orders, true ], [ :restock, false ] ], Shop.exposures.map { |exposure| [ exposure.name, exposure.for_clients ] }
+    end
+
+    test "a method not marked for clients is never listed to a client caller" do
+      HubKernel::Authz.caller_kind = ->(_person, _account) { :client }
+
+      assert_equal [ :my_orders ], Shop.exposures_for(person: :cleo, account: :acme).map(&:name)
     end
   end
 end

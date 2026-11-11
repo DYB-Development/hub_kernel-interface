@@ -31,7 +31,7 @@ module HubKernel
     def exposures_for(person:, account:)
       refuse_without_caller(person, account)
 
-      exposures.select { |exposure| allowed?(exposure, person, account) }
+      exposures.select { |exposure| reachable?(exposure, person, account) && allowed?(exposure, person, account) }
     end
 
     def allows?(name, person:, account:)
@@ -73,6 +73,8 @@ module HubKernel
     def refuse_unless_allowed(exposure, person, account)
       raise NotAllowed, "#{exposing_hub} #{exposure.name}" unless allowed?(exposure, person, account)
     end
+
+    def reachable?(exposure, person, account) = Authz.caller_kind.call(person, account) != :client || exposure.for_clients
 
     def allowed?(exposure, person, account)
       raise UnwiredPortError, "hub_kernel's permission check is not filled" unless Authz.check
