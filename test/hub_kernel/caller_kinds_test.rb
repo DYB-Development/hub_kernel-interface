@@ -24,6 +24,12 @@ module HubKernel
       assert_equal [ [ :my_orders, true ], [ :restock, false ] ], Shop.exposures.map { |exposure| [ exposure.name, exposure.for_clients ] }
     end
 
+    test "a host that does not say how to tell callers apart has every method listed as before" do
+      HubKernel::Authz.caller_kind = nil
+
+      assert_equal [ :my_orders, :restock ], Shop.exposures_for(person: :sam, account: :acme).map(&:name)
+    end
+
     test "a method not marked for clients is never listed to a client caller" do
       HubKernel::Authz.caller_kind = ->(_person, _account) { :client }
 
