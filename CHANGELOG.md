@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Added
+- `HubKernel::Authz.caller_kind`, where a host answers `:client` or `:staff` for the person and the account a call is made as.
+- `exposes` takes an optional `for_clients: true` that marks a method for clients, read back with `exposure.for_clients`.
+- A client caller is listed and may call only the methods marked for clients, a staff caller only the methods not marked, and a host that sets no caller kind has every method listed and served as in 0.11.0.
+- A client caller who calls a method not marked for clients is refused with `HubKernel::NotAllowed`, and `allows?` answers `false` for a method the caller's kind may not reach.
+- A caller kind that answers anything but `:client` or `:staff` raises `HubKernel::UnknownCallerKindError`.
+
 ## [0.11.0] - 2026-11-03
 
 ### Added
