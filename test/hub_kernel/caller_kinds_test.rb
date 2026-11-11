@@ -63,5 +63,15 @@ module HubKernel
 
       assert_equal false, Shop.allows?("my_orders", person: :sam, account: :acme)
     end
+
+    test "the permission check is asked about every method a client caller may reach and no other" do
+      asked = []
+      HubKernel::Authz.check = ->(_person, action, _account) { asked << action; true }
+      HubKernel::Authz.caller_kind = ->(_person, _account) { :client }
+
+      Shop.exposures_for(person: :cleo, account: :acme)
+
+      assert_equal [ "shop:my_orders" ], asked
+    end
   end
 end
