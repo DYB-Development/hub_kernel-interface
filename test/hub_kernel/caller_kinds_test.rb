@@ -14,11 +14,12 @@ module HubKernel
     end
 
     setup do
-      @check, @caller_kind = HubKernel::Authz.check, HubKernel::Authz.caller_kind
+      @check, @caller_kind, @scope = HubKernel::Authz.check, HubKernel::Authz.caller_kind, HubKernel::Context.scope
       HubKernel::Authz.check = ->(*) { true }
+      HubKernel::Context.scope = ->(_account, &call) { call.call }
     end
 
-    teardown { HubKernel::Authz.check, HubKernel::Authz.caller_kind = @check, @caller_kind }
+    teardown { HubKernel::Authz.check, HubKernel::Authz.caller_kind, HubKernel::Context.scope = @check, @caller_kind, @scope }
 
     test "a method is marked for clients only when its exposes line says so" do
       assert_equal [ [ :my_orders, true ], [ :restock, false ] ], Shop.exposures.map { |exposure| [ exposure.name, exposure.for_clients ] }
@@ -49,6 +50,12 @@ module HubKernel
       Shop.exposures_for(person: :cleo, account: :acme)
 
       assert_equal [ [ :cleo, :acme ] ], asked
+    end
+
+    test "a client caller who calls a method not marked for clients is refused as the permission check refuses" do
+      HubKernel::Authz.caller_kind = ->(_person, _account) { :client }
+
+      assert_raises(HubKernel::NotAllowed, match: "Shop restock") { Shop.call_exposed("restock", values: { item: "soap" }, person: :cleo, account: :acme) }
     end
   end
 end
