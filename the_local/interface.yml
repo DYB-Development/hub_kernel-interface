@@ -5,6 +5,7 @@ install:
   - HubKernel::Interface.hubs=
   - HubKernel::Authz.check=
   - HubKernel::Authz.caller_kind=
+  - HubKernel::Authz.caller_organization=
   - HubKernel::Context.scope=
 
 develop:
