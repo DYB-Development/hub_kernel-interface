@@ -13,16 +13,16 @@ module HubKernel
   class Refused < StandardError; end
 
   module Exposes
-    Exposed = Data.define(:name, :takes, :writes, :earlier_answers, :answer_shape, :for_clients) do
+    Exposed = Data.define(:name, :takes, :writes, :earlier_answers, :answer_shape, :for_clients, :organization) do
       def earlier_answer(major) = earlier_answers.find { |earlier| earlier.major == major }
     end
     EarlierAnswer = Data.define(:major, :translation, :answer_shape) do
       def translate(answer) = translation.call(answer)
     end
 
-    def exposes(name, takes:, writes:, earlier_answers: {}, answer_shape: nil, for_clients: false)
+    def exposes(name, takes:, writes:, earlier_answers: {}, answer_shape: nil, for_clients: false, organization: nil)
       Interface::ExposingHubs.add(self)
-      exposed_methods[name.to_s] = Exposed.new(name: name, takes: takes, writes: writes, earlier_answers: earlier_answers.map { |major, declared| earlier_answer_from(major, declared) }, answer_shape: answer_shape, for_clients: for_clients)
+      exposed_methods[name.to_s] = Exposed.new(name: name, takes: takes, writes: writes, earlier_answers: earlier_answers.map { |major, declared| earlier_answer_from(major, declared) }, answer_shape: answer_shape, for_clients: for_clients, organization: organization)
     end
 
     def exposed(name) = exposed_methods[name.to_s]
@@ -48,7 +48,7 @@ module HubKernel
       exposure = exposed(name) || raise(UnexposedMethodError, "#{exposing_hub} does not expose #{name}")
       refuse_unless_allowed(exposure, person, account)
       refuse_missing_values(exposure, values)
-      Context.with_person(person) { within_account(account, person) { public_send(exposure.name, **values.slice(*exposure.takes)) } }
+      Context.with_person(person) { within_account(account, person) { public_send(exposure.name, **values.slice(*exposure.takes), **organization_value(exposure, person, account)) } }
     end
 
     def exposure_problems
@@ -107,8 +107,14 @@ module HubKernel
 
     def scope_takes_person? = (Context.scope.respond_to?(:parameters) ? Context.scope : Context.scope.method(:call)).parameters.any? { |kind, name| %i[key keyreq].include?(kind) && name == :person }
 
+    def organization_value(exposure, person, account)
+      return {} unless exposure.organization
+
+      { exposure.organization => Authz.caller_organization.call(person, account) }
+    end
+
     def refuse_missing_values(exposure, values)
-      missing = keywords(exposure, :keyreq) - values.keys
+      missing = keywords(exposure, :keyreq) - values.keys - [ exposure.organization ]
       raise MissingArgumentError, "Give #{missing.join(", ")}" if missing.any?
     end
 
